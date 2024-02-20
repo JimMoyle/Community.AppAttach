@@ -38,6 +38,9 @@ function Update-CaaTemplateXml {
     # Perform necessary changes to the XML
     $template.MsixPackagingToolTemplate.Installer.Path = $InstallerPath
     $template.MsixPackagingToolTemplate.SaveLocation.PackagePath = $PackageSaveLocation
+    $template.MsixPackagingToolTemplate.RemoteMachine.ComputerName = $ComputerName
+    $template.MsixPackagingToolTemplate.RemoteMachine.UserName = $UserName
+    $template.MsixPackagingToolTemplate.RemoteMachine.EnableAutoLogon = $true
 
     # Save the modified XML to the output path
     #$template.Save($Path)
