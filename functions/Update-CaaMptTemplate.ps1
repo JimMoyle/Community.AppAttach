@@ -6,7 +6,7 @@ function Update-CaaMptTemplate {
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true,
             ValuefromPipeline = $true)]
-            [ValidateScript({
+        [ValidateScript({
                 if (-Not ($_ | Test-Path) ) { throw "File does not exist" }
                 if (-Not ($_ | Test-Path -PathType Leaf) ) { throw "The Path argument must be a file. Folder paths are not allowed." }
                 if ($_ -notlike "*.xml") {
@@ -40,17 +40,41 @@ function Update-CaaMptTemplate {
         [string]$UserName
     )
 
+
+    
     # Read the XML file
     $template = [xml](Get-Content -Path $Path)
 
     # Perform necessary changes to the XML
+
+
+    #build new node by hand and force it to be an XML object
+    [xml]$newNode = @"
+<RemoteMachine ComputerName="$ComputerName" Username="$UserName" EnableAutoLogon="true"/>
+"@
+$foundNode = $template.MsixPackagingToolTemplate.Installer
+$importNode = $template.ImportNode($newNode.RemoteMachine,$true)
+$template.MsixPackagingToolTemplate.InsertAfter($importNode,$foundNode)
+  
+    <##
     $template.MsixPackagingToolTemplate.Installer.Path = $InstallerPath
     $template.MsixPackagingToolTemplate.SaveLocation.PackagePath = $PackageSaveLocation
-    $template.MsixPackagingToolTemplate | Add-Member -MemberType NoteProperty -Name RemoteMachine -Value $null
-    $template.MsixPackagingToolTemplate.RemoteMachine | Add-Member -MemberType NoteProperty -Name ComputerName -Value $ComputerName
-    $template.MsixPackagingToolTemplate.RemoteMachine | Add-Member -MemberType NoteProperty -Name UserName -Value $UserName
-    $template.MsixPackagingToolTemplate.RemoteMachine | Add-Member -MemberType NoteProperty -Name EnableAutoLogon -Value $true
+
+    $template.MsixPackagingToolTemplate | Add-Member -NotePropertyName VirtualMachine -NotePropertyValue ''
+    
+    -NotePropertyMembers @{
+        ComputerName = $ComputerName
+        UserName = $UserName
+        EnableAutoLogon = $true
+    }
+
+
+    $template.MsixPackagingToolTemplate.VirtualMachine | Add-Member -NotePropertyName ComputerName -NotePropertyValue $ComputerName
+    $template.MsixPackagingToolTemplate.VirtualMachine | Add-Member -MemberType NoteProperty -Name UserName -Value $UserName
+    $template.MsixPackagingToolTemplate.VirtualMachine | Add-Member -MemberType NoteProperty -Name EnableAutoLogon -Value $true
+
+    ##>
 
     # Save the modified XML to the output path
-    #$template.Save($Path)
+    $template.Save($Path)
 }
