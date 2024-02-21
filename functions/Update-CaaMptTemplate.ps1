@@ -40,6 +40,20 @@ function Update-CaaMptTemplate {
         [string]$UserName
     )
 
+    # Read the XML file
+    $template = [xml](Get-Content -Path $Path)
+
+    # Perform necessary changes to the XML
+
+    # Replace the MsixPackagingToolTemplate namespace
+    $template.MsixPackagingToolTemplate.SetAttribute("xmlns", "http://schemas.microsoft.com/appx/msixpackagingtool/template/2018")
+    $template.MsixPackagingToolTemplate.SetAttribute("xmlns:V2", "http://schemas.microsoft.com/msix/msixpackagingtool/template/1904")
+    $template.MsixPackagingToolTemplate.SetAttribute("xmlns:V3", "http://schemas.microsoft.com/msix/msixpackagingtool/template/1907")
+    $template.MsixPackagingToolTemplate.SetAttribute("xmlns:V4", "http://schemas.microsoft.com/msix/msixpackagingtool/template/1910")
+    $template.MsixPackagingToolTemplate.SetAttribute("xmlns:V5", "http://schemas.microsoft.com/msix/msixpackagingtool/template/2001")
+
+    # Save the modified XML to the output path
+    $template.Save($Path)
 
     
     # Read the XML file
