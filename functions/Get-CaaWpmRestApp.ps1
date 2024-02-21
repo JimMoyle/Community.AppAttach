@@ -10,8 +10,8 @@ function Get-CaaWpmRestApp {
             ValuefromPipeline = $true,
             Mandatory = $true
         )]
-        [Alias('Id')]
-        [System.String]$PackageIdentifier,
+        [Alias('PackageIdentifier')]
+        [System.String]$ID,
 
         [Parameter(
             ValuefromPipelineByPropertyName = $true
@@ -29,10 +29,10 @@ function Get-CaaWpmRestApp {
     } # begin
 
     process {
-        Write-Verbose "Querying $PackageIdentifier from $Uri"
+        Write-Verbose "Querying $ID from $Uri"
 
         # Construct the query URI
-        $queryUri = $Uri.ToString().TrimEnd('/') + '/' + $PackageIdentifier
+        $queryUri = $Uri.ToString().TrimEnd('/') + '/' + $ID
 
         $noResponse = $true
         $timeSpan = (Get-Date).AddSeconds($ApiTimeoutSeconds)
@@ -40,7 +40,7 @@ function Get-CaaWpmRestApp {
         # Wait for a response or timeout
         while ($noResponse) {
             if ((Get-Date) -gt $timeSpan) {
-                Write-Error "Timeout waiting for $PackageIdentifier response from $queryUri"
+                Write-Error "Timeout waiting for $ID response from $queryUri"
                 return
             }
             try {
@@ -54,12 +54,12 @@ function Get-CaaWpmRestApp {
 
         # Check if the package is null
         if ($null -eq $package) {
-            Write-Error "Could not find package with Id $PackageIdentifier"
+            Write-Error "Could not find package with Id $ID"
             return
         }
         # Check if the package is properly formed
         if ($package.PSobject.Properties.Name -notcontains 'Data') {
-            Write-Error "Package with Id $PackageIdentifier did not return a valid response from REST"
+            Write-Error "Package with Id $ID did not return a valid response from REST"
             return
         }
 
@@ -83,7 +83,7 @@ function Get-CaaWpmRestApp {
         }
         catch {
             # Output any errors that occur during version selection
-            Write-Error "Error selecting newest package version for $PackageIdentifier"
+            Write-Error "Error selecting newest package version for $ID"
         }
 
         # Select the package detail with the highest version number
@@ -96,7 +96,7 @@ function Get-CaaWpmRestApp {
         # Wait for a version query match or timeout
         while (($appInfo | Measure-Object).Count -eq 0 ) {
             if ((Get-Date) -gt $timeSpan) {
-                Write-Error "Timeout waiting for version query match for $PackageIdentifier"
+                Write-Error "Timeout waiting for version query match for $ID"
                 return
             }
             # As the version can't be trusted getting the recent one by joining the installer sha256
@@ -108,7 +108,7 @@ function Get-CaaWpmRestApp {
 
             # Create a custom object with the installer details
             $output = [PSCustomObject]@{
-                PackageName               = $package.Data.PackageIdentifier
+                PackageIdentifier         = $package.Data.PackageIdentifier
                 PackageVersion            = $packageDetail.PackageVersion
                 Publisher                 = $appInfo.DefaultLocale.Publisher
                 ShortDescription          = $appInfo.DefaultLocale.ShortDescription

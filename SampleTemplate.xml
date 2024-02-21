@@ -297,7 +297,7 @@
     </ExclusionItems>
   </Settings>
   <PrepareComputer DisableWindowsUpdateService="true" />
-  <SaveLocation PackagePath="C:\Users\User2\Desktop\Microsoft.VisualStudioCode.Insiders_1.0.0.0_x64__479h0rr4v8y2t.msix" TemplatePath="C:\Users\User2\Desktop\Microsoft.VisualStudioCode.Insiders_1.0.0.0_x64__479h0rr4v8y2t_template.xml" />
-  <Installer Path="C:\Users\User2\Desktop\VSCodeSetup-x64-1.87.0-insider.exe" Arguments="/VERYSILENT /MERGETASKS=!runcode" />
+  <SaveLocation PackagePath="C:\Packaging\Desktop\Microsoft.VisualStudioCode.Insiders_1.0.0.0_x64__479h0rr4v8y2t.msix" TemplatePath="C:\Packaging\Microsoft.VisualStudioCode.Insiders_1.0.0.0_x64__479h0rr4v8y2t_template.xml" />
+  <Installer Path="C:\Packaging\VSCodeSetup-x64-1.87.0-insider.exe" Arguments="/VERYSILENT /MERGETASKS=!runcode" />
   <PackageInformation PackageName="Microsoft.VisualStudioCode.Insiders" PackageDisplayName="CodeInsiders" PublisherName="CN=jimadmin, CN=Users, DC=AVD, DC=Tools" PublisherDisplayName="JimMoyle" Version="1.0.0.0" p4:PackageDescription="blah" xmlns:p4="http://schemas.microsoft.com/msix/msixpackagingtool/template/1910" />
 </MsixPackagingToolTemplate>

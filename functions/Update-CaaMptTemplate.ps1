@@ -1,4 +1,4 @@
-function Update-CaaTemplateXml {
+function Update-CaaMptTemplate {
     [CmdletBinding()]
     param (
         [Parameter(
@@ -6,6 +6,14 @@ function Update-CaaTemplateXml {
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true,
             ValuefromPipeline = $true)]
+            [ValidateScript({
+                if (-Not ($_ | Test-Path) ) { throw "File does not exist" }
+                if (-Not ($_ | Test-Path -PathType Leaf) ) { throw "The Path argument must be a file. Folder paths are not allowed." }
+                if ($_ -notlike "*.xml") {
+                    throw "Template files must be in xml format, this file does not have an xml extension"
+                }
+                return $true
+            })]
         [Alias('PSPath')]
         [string]$Path,
 
@@ -38,12 +46,11 @@ function Update-CaaTemplateXml {
     # Perform necessary changes to the XML
     $template.MsixPackagingToolTemplate.Installer.Path = $InstallerPath
     $template.MsixPackagingToolTemplate.SaveLocation.PackagePath = $PackageSaveLocation
-    $template.MsixPackagingToolTemplate.RemoteMachine.ComputerName = $ComputerName
-    $template.MsixPackagingToolTemplate.RemoteMachine.UserName = $UserName
-    $template.MsixPackagingToolTemplate.RemoteMachine.EnableAutoLogon = $true
+    $template.MsixPackagingToolTemplate | Add-Member -MemberType NoteProperty -Name RemoteMachine -Value $null
+    $template.MsixPackagingToolTemplate.RemoteMachine | Add-Member -MemberType NoteProperty -Name ComputerName -Value $ComputerName
+    $template.MsixPackagingToolTemplate.RemoteMachine | Add-Member -MemberType NoteProperty -Name UserName -Value $UserName
+    $template.MsixPackagingToolTemplate.RemoteMachine | Add-Member -MemberType NoteProperty -Name EnableAutoLogon -Value $true
 
     # Save the modified XML to the output path
     #$template.Save($Path)
 }
-
-Update-CaaTemplateXml 'D:\PoShCode\GitHub\Community.AppAttach\SampleTemplate.xml' -InstallerPath 'd:\myInstaller.exe' -PackageSaveLocation 'd:\myMsix.msix' -ComputerName 'myComputer' -UserName 'myUser'
