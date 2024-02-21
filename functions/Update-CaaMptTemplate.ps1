@@ -54,40 +54,27 @@ function Update-CaaMptTemplate {
 
     # Save the modified XML to the output path
     $template.Save($Path)
-
     
     # Read the XML file
     $template = [xml](Get-Content -Path $Path)
 
-    # Perform necessary changes to the XML
+    if ( $null -eq $template.MsixPackagingToolTemplate.RemoteMachine ) {
+        #build new node by hand and force it to be an XML object with the relevant schema changes v2: v3: etc.
+        $remoteXmlText = "<v2:RemoteMachine ComputerName=`"$ComputerName`" Username=`"$UserName`" v3:EnableAutoLogon=`"true`"/>"
+        [xml]$remoteXmlNode = "<dummySchema xmlns:v2='http://schemas.microsoft.com/msix/msixpackagingtool/template/1904' xmlns:v3='http://schemas.microsoft.com/msix/msixpackagingtool/template/1907'>$remoteXmlText</dummySchema>"
 
-
-    #build new node by hand and force it to be an XML object
-    [xml]$newNode = @"
-<RemoteMachine ComputerName="$ComputerName" Username="$UserName" EnableAutoLogon="true"/>
-"@
-$foundNode = $template.MsixPackagingToolTemplate.Installer
-$importNode = $template.ImportNode($newNode.RemoteMachine,$true)
-$template.MsixPackagingToolTemplate.InsertAfter($importNode,$foundNode)
-  
-    <##
+        $foundNode = $template.MsixPackagingToolTemplate.Installer
+        $importNode = $template.ImportNode($remoteXmlNode.dummySchema.RemoteMachine, $true)
+        $template.MsixPackagingToolTemplate.InsertAfter($importNode, $foundNode)
+    }
+    else{
+        $template.MsixPackagingToolTemplate.RemoteMachine.ComputerName = $ComputerName
+        $template.MsixPackagingToolTemplate.RemoteMachine.UserName = $UserName
+    }
+    
     $template.MsixPackagingToolTemplate.Installer.Path = $InstallerPath
     $template.MsixPackagingToolTemplate.SaveLocation.PackagePath = $PackageSaveLocation
 
-    $template.MsixPackagingToolTemplate | Add-Member -NotePropertyName VirtualMachine -NotePropertyValue ''
-    
-    -NotePropertyMembers @{
-        ComputerName = $ComputerName
-        UserName = $UserName
-        EnableAutoLogon = $true
-    }
-
-
-    $template.MsixPackagingToolTemplate.VirtualMachine | Add-Member -NotePropertyName ComputerName -NotePropertyValue $ComputerName
-    $template.MsixPackagingToolTemplate.VirtualMachine | Add-Member -MemberType NoteProperty -Name UserName -Value $UserName
-    $template.MsixPackagingToolTemplate.VirtualMachine | Add-Member -MemberType NoteProperty -Name EnableAutoLogon -Value $true
-
-    ##>
 
     # Save the modified XML to the output path
     $template.Save($Path)
