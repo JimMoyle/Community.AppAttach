@@ -52,6 +52,11 @@ function Update-CaaMptTemplate {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
+        [String]$PackageDisplayName,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
         [string]$ShortDescription
     )
 
@@ -75,8 +80,8 @@ function Update-CaaMptTemplate {
 
     if ( $null -eq $template.MsixPackagingToolTemplate.RemoteMachine ) {
         #build new node by hand and force it to be an XML object with the relevant schema changes v2: v3: etc.
-        $remoteXmlText = "<v2:RemoteMachine ComputerName=`"$ComputerName`" Username=`"$UserName`" v3:EnableAutoLogon=`"true`"/>"
-        [xml]$remoteXmlNode = "<dummySchema xmlns:v2='http://schemas.microsoft.com/msix/msixpackagingtool/template/1904' xmlns:v3='http://schemas.microsoft.com/msix/msixpackagingtool/template/1907'>$remoteXmlText</dummySchema>"
+        $remoteXmlText = "<RemoteMachine ComputerName=`"$ComputerName`" Username=`"$UserName`"/>"
+        [xml]$remoteXmlNode = "<dummySchema xmlns='http://schemas.microsoft.com/msix/msixpackagingtool/template/1904'>$remoteXmlText</dummySchema>"
 
         $foundNode = $template.MsixPackagingToolTemplate.Installer
         $importNode = $template.ImportNode($remoteXmlNode.dummySchema.RemoteMachine, $true)
@@ -88,15 +93,33 @@ function Update-CaaMptTemplate {
     }
 
     if ($ShortDescription){
-        $template.MsixPackagingToolTemplate.Installer.PackageDescription = $ShortDescription
+        $template.MsixPackagingToolTemplate.PackageInformation.PackageDescription = $ShortDescription
     }
 
     if ($PackageVersion){
-        $template.MsixPackagingToolTemplate.Installer.PackageDescription = $PackageVersion.ToString()
+        $verCount = $PackageVersion.ToString().Split('.').Count
+        if ($verCount -lt 4) {
+            (4 - $verCount)..1 | ForEach-Object {
+                $PackageVersion = $PackageVersion.ToString() + '.0'
+            }
+        }
+        if ($verCount -gt 4) {
+            #TODO Something like $Version = ($Version.ToString() -replace "^(\d+(\.\d+){0,3})(\.\d+)*$" , "$1")
+        }
+        $template.MsixPackagingToolTemplate.PackageInformation.Version = $PackageVersion.ToString()
+    }
+    else{
+        $template.MsixPackagingToolTemplate.PackageInformation.Version = $template.MsixPackagingToolTemplate.PackageInformation.Version++
     }
 
-    if ($Publisher){
-        $template.MsixPackagingToolTemplate.Installer.Publisher = $Publisher
+    if (-not ($PackageDisplayName)){
+        $nameSplit = $template.MsixPackagingToolTemplate.PackageInformation.PackageName.Split('.')
+        if ($nameSplit.Count -gt 1){
+            (1 - $nameSplit.Count)..-1 | ForEach-Object {
+                $PackageDisplayName += ($nameSplit[$_] + '.')
+            }
+        }
+        $PackageDisplayName = $PackageDisplayName.TrimEnd('.')
     }
     
     $template.MsixPackagingToolTemplate.Installer.Path = $InstallerPath
