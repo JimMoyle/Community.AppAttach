@@ -22,7 +22,7 @@ function Move-CaaInstallerToVersionPath {
             Mandatory = $true
         )]
         [ValidateScript({
-            if (-Not ($_ | Test-Path) ) { throw "File does not exist" }
+            if (-Not ($_ | Test-Path) ) { throw "Folder does not exist" }
             if (-Not ($_ | Test-Path -PathType Container) ) { throw "The Path argument must be a folder. File paths are not allowed." }
             return $true
         })]

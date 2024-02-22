@@ -10,7 +10,7 @@ function Update-CaaMptTemplate {
                 if (-Not ($_ | Test-Path) ) { throw "File does not exist" }
                 if (-Not ($_ | Test-Path -PathType Leaf) ) { throw "The Path argument must be a file. Folder paths are not allowed." }
                 if ($_ -notlike "*.xml") {
-                    throw "Template files must be in xml format, this file does not have an xml extension"
+                    throw "Template files must be in xml format, $_ does not have an xml extension"
                 }
                 return $true
             })]
@@ -37,7 +37,22 @@ function Update-CaaMptTemplate {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [string]$UserName
+        [string]$UserName,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [version]$PackageVersion,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [String]$Publisher,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [string]$ShortDescription
     )
 
     # Read the XML file
@@ -70,6 +85,18 @@ function Update-CaaMptTemplate {
     else{
         $template.MsixPackagingToolTemplate.RemoteMachine.ComputerName = $ComputerName
         $template.MsixPackagingToolTemplate.RemoteMachine.UserName = $UserName
+    }
+
+    if ($ShortDescription){
+        $template.MsixPackagingToolTemplate.Installer.PackageDescription = $ShortDescription
+    }
+
+    if ($PackageVersion){
+        $template.MsixPackagingToolTemplate.Installer.PackageDescription = $PackageVersion.ToString()
+    }
+
+    if ($Publisher){
+        $template.MsixPackagingToolTemplate.Installer.Publisher = $Publisher
     }
     
     $template.MsixPackagingToolTemplate.Installer.Path = $InstallerPath
