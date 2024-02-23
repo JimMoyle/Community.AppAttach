@@ -104,7 +104,7 @@ function Update-CaaMptTemplate {
             }
         }
         if ($verCount -gt 4) {
-            #TODO Something like $Version = ($Version.ToString() -replace "^(\d+(\.\d+){0,3})(\.\d+)*$" , "$1")
+            $PackageVersion = $PackageVersion.ToString() -replace "^(\d+(?:\.\d+){0,3})(?:\.\d+)*$", $matches[1]
         }
         $template.MsixPackagingToolTemplate.PackageInformation.Version = $PackageVersion.ToString()
     }
@@ -124,7 +124,6 @@ function Update-CaaMptTemplate {
     
     $template.MsixPackagingToolTemplate.Installer.Path = $InstallerPath
     $template.MsixPackagingToolTemplate.SaveLocation.PackagePath = $PackageSaveLocation
-
 
     # Save the modified XML to the output path
     $template.Save($Path)
