@@ -8,7 +8,7 @@ function New-CaaMsixFullName {
             ValuefromPipelineByPropertyName = $true
         )]
         [ValidateScript({ if ($_ -like '*.*') { return $true }; throw 'Value must be PublisherName.AppName' })]
-        [string]$PackageIdentifier,
+        [String]$PackageIdentifier,
 
         [Parameter(
             ParameterSetName = 'Publisher AppName',
@@ -16,7 +16,7 @@ function New-CaaMsixFullName {
             ValuefromPipelineByPropertyName = $true
         )]
         [ValidateScript({ if ($_ -notmatch ' ') { return $true }; throw 'Value must not contain spaces.' })]
-        [string]$Publisher,
+        [String]$Publisher,
 
         [Parameter(
             ParameterSetName = 'Publisher AppName',
@@ -24,29 +24,29 @@ function New-CaaMsixFullName {
             ValuefromPipelineByPropertyName = $true
         )]
         [ValidateScript({ if ($_ -notmatch ' ') { return $true }; throw 'Value must not contain spaces.' })]
-        [string]$AppName,
+        [String]$AppName,
 
         [Parameter(
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true
         )]
         [Alias('PackageVersion')]
-        [ValidateScript({ if ($_.Split('.').Count -eq 4) { return $true }; throw 'Value must not contain spaces.' })]
-        [version]$Version,
+        [ValidateScript({ if ($_.ToString().Split('.').Count -eq 4) { return $true }; throw 'Value must not contain spaces.' })]
+        [Version]$Version,
 
         [Parameter(
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true
         )]
         [ValidateSet('x86', 'x64', 'neutral', 'ARM64', 'ARM')]
-        [version]$Architecture,
+        [String]$Architecture,
 
         [Parameter(
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true
         )]
-        [ValidateLength(13)]
-        [version]$CertHash
+        [ValidateLength(13,13)]
+        [string]$CertHash
 
     )
     

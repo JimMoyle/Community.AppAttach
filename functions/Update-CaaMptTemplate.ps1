@@ -15,34 +15,38 @@ function Update-CaaMptTemplate {
                 return $true
             })]
         [Alias('PSPath')]
-        [string]$Path,
+        [String]$Path,
 
         [Parameter(
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true
         )]
-        [string]$PackageSaveLocation,
+        [String]$InstallerPath,
 
         [Parameter(
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true
         )]
-        [string]$InstallerPath,
+        [String]$ComputerName,
+
+        [Parameter(
+            Mandatory = $true,
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [String]$UserName,
+
+        [Parameter(
+            Mandatory = $true,
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [ValidateScript({ if ($Version.ToString().Split('.').Count -eq 4) { return $true }; throw 'Version must have 4 numbers 1.2.3.4' })]
+        [Alias('PackageVersion')]
+        [Version]$Version,
 
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [string]$ComputerName,
-
-        [Parameter(
-            ValuefromPipelineByPropertyName = $true
-        )]
-        [string]$UserName,
-
-        [Parameter(
-            ValuefromPipelineByPropertyName = $true
-        )]
-        [version]$PackageVersion,
+        [String]$PackageSaveLocation,
 
         [Parameter(
             ValuefromPipelineByPropertyName = $true
@@ -57,15 +61,14 @@ function Update-CaaMptTemplate {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [string]$ShortDescription
+        [String]$ShortDescription
     )
 
     # Read the XML file
     $template = [xml](Get-Content -Path $Path)
 
-    # Perform necessary changes to the XML
 
-    # Replace the MsixPackagingToolTemplate namespace
+    # Replace the MsixPackagingToolTemplate namespace as we need the more recent namespaces to make the full functionality of remote packaging work.
     $template.MsixPackagingToolTemplate.SetAttribute("xmlns", "http://schemas.microsoft.com/appx/msixpackagingtool/template/2018")
     $template.MsixPackagingToolTemplate.SetAttribute("xmlns:V2", "http://schemas.microsoft.com/msix/msixpackagingtool/template/1904")
     $template.MsixPackagingToolTemplate.SetAttribute("xmlns:V3", "http://schemas.microsoft.com/msix/msixpackagingtool/template/1907")
@@ -78,6 +81,15 @@ function Update-CaaMptTemplate {
     # Read the XML file
     $template = [xml](Get-Content -Path $Path)
 
+    $template.MsixPackagingToolTemplate.PackageInformation.Version = $Version.ToString()
+    $template.MsixPackagingToolTemplate.Installer.Path = $InstallerPath
+    $template.MsixPackagingToolTemplate.SaveLocation.PackagePath = $PackageSaveLocation
+
+    if ($ShortDescription){
+        $template.MsixPackagingToolTemplate.PackageInformation.PackageDescription = $ShortDescription
+    }
+
+    # This section isn't there by default in the template so we need to create it if needed
     if ( $null -eq $template.MsixPackagingToolTemplate.RemoteMachine ) {
         #build new node by hand and force it to be an XML object with the relevant schema changes v2: v3: etc.
         $remoteXmlText = "<RemoteMachine ComputerName=`"$ComputerName`" Username=`"$UserName`"/>"
@@ -92,25 +104,29 @@ function Update-CaaMptTemplate {
         $template.MsixPackagingToolTemplate.RemoteMachine.UserName = $UserName
     }
 
-    if ($ShortDescription){
-        $template.MsixPackagingToolTemplate.PackageInformation.PackageDescription = $ShortDescription
-    }
 
-    if ($PackageVersion){
-        $verCount = $PackageVersion.ToString().Split('.').Count
-        if ($verCount -lt 4) {
-            (4 - $verCount)..1 | ForEach-Object {
-                $PackageVersion = $PackageVersion.ToString() + '.0'
-            }
-        }
-        if ($verCount -gt 4) {
-            $PackageVersion = $PackageVersion.ToString() -replace "^(\d+(?:\.\d+){0,3})(?:\.\d+)*$", $matches[1]
-        }
-        $template.MsixPackagingToolTemplate.PackageInformation.Version = $PackageVersion.ToString()
+
+    <##
+
+    if ( $null -eq $template.MsixPackagingToolTemplate.RemoteMachine ) {
+        #build new node by hand and force it to be an XML object with the relevant schema changes v2: v3: etc.
+        $remoteXmlText = "<RemoteMachine ComputerName=`"$ComputerName`" Username=`"$UserName`"/>"
+        [xml]$remoteXmlNode = "<dummySchema xmlns='http://schemas.microsoft.com/msix/msixpackagingtool/template/1904'>$remoteXmlText</dummySchema>"
+
+        $foundNode = $template.MsixPackagingToolTemplate.Installer
+        $importNode = $template.ImportNode($remoteXmlNode.dummySchema.RemoteMachine, $true)
+        $template.MsixPackagingToolTemplate.InsertAfter($importNode, $foundNode)
     }
     else{
-        $template.MsixPackagingToolTemplate.PackageInformation.Version = $template.MsixPackagingToolTemplate.PackageInformation.Version++
+        $template.MsixPackagingToolTemplate.RemoteMachine.ComputerName = $ComputerName
+        $template.MsixPackagingToolTemplate.RemoteMachine.UserName = $UserName
     }
+   ##>
+
+
+ 
+
+   
 
     if (-not ($PackageDisplayName)){
         $nameSplit = $template.MsixPackagingToolTemplate.PackageInformation.PackageName.Split('.')
@@ -121,9 +137,7 @@ function Update-CaaMptTemplate {
         }
         $PackageDisplayName = $PackageDisplayName.TrimEnd('.')
     }
-    
-    $template.MsixPackagingToolTemplate.Installer.Path = $InstallerPath
-    $template.MsixPackagingToolTemplate.SaveLocation.PackagePath = $PackageSaveLocation
+
 
     # Save the modified XML to the output path
     $template.Save($Path)
