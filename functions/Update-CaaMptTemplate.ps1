@@ -39,7 +39,7 @@ function Update-CaaMptTemplate {
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true
         )]
-        [ValidateScript({ if ($Version.ToString().Split('.').Count -eq 4) { return $true }; throw 'Version must have 4 numbers 1.2.3.4' })]
+        [ValidateScript({ if ($_.ToString().Split('.').Count -eq 4) { return $true }; throw 'Version must have 4 numbers 1.2.3.4' })]
         [Alias('PackageVersion')]
         [Version]$Version,
 
@@ -51,7 +51,17 @@ function Update-CaaMptTemplate {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [String]$Publisher,
+        [String]$TemplateSaveLocation,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [String]$PublisherName,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [String]$PublisherDisplayName,
 
         [Parameter(
             ValuefromPipelineByPropertyName = $true
@@ -66,7 +76,6 @@ function Update-CaaMptTemplate {
 
     # Read the XML file
     $template = [xml](Get-Content -Path $Path)
-
 
     # Replace the MsixPackagingToolTemplate namespace as we need the more recent namespaces to make the full functionality of remote packaging work.
     $template.MsixPackagingToolTemplate.SetAttribute("xmlns", "http://schemas.microsoft.com/appx/msixpackagingtool/template/2018")
@@ -85,8 +94,24 @@ function Update-CaaMptTemplate {
     $template.MsixPackagingToolTemplate.Installer.Path = $InstallerPath
     $template.MsixPackagingToolTemplate.SaveLocation.PackagePath = $PackageSaveLocation
 
+    if ($TemplateSaveLocation){
+        $template.MsixPackagingToolTemplate.PackageInformation.TemplatePath = $TemplateSaveLocation
+    }
+    
     if ($ShortDescription){
         $template.MsixPackagingToolTemplate.PackageInformation.PackageDescription = $ShortDescription
+    }
+
+    if ($PublisherDisplayName){
+        $template.MsixPackagingToolTemplate.PackageInformation.PublisherDisplayName = $PublisherDisplayName
+    }
+
+    if ($PublisherName){
+        $template.MsixPackagingToolTemplate.PackageInformation.PublisherName = $PublisherName
+    }
+
+    if ($NoTemplate){
+        $template.MsixPackagingToolTemplate.Settings.GenerateCommandLineFile = 'false'
     }
 
     # This section isn't there by default in the template so we need to create it if needed
@@ -105,9 +130,8 @@ function Update-CaaMptTemplate {
     }
 
 
-
     <##
-
+    # TODO DeviceGuardSigning
     if ( $null -eq $template.MsixPackagingToolTemplate.RemoteMachine ) {
         #build new node by hand and force it to be an XML object with the relevant schema changes v2: v3: etc.
         $remoteXmlText = "<RemoteMachine ComputerName=`"$ComputerName`" Username=`"$UserName`"/>"
@@ -122,11 +146,6 @@ function Update-CaaMptTemplate {
         $template.MsixPackagingToolTemplate.RemoteMachine.UserName = $UserName
     }
    ##>
-
-
- 
-
-   
 
     if (-not ($PackageDisplayName)){
         $nameSplit = $template.MsixPackagingToolTemplate.PackageInformation.PackageName.Split('.')

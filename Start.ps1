@@ -11,6 +11,9 @@ Foreach ($import in $Functions) {
     }
 }
 
+$UseEverGreen = $true
+
+$EverGreenPackageID = 'MicrosoftVisualStudioCode'
 $WpmPackageID = 'Microsoft.VisualStudioCode.Insiders'
 
 $templateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
@@ -24,17 +27,39 @@ $UserName = 'User2@avd.tools'
 $timeStampServer = 'http://timestamp.digicert.com'
 
 $certPass = ConvertTo-SecureString (Get-Content 'c:\JimM\certPass.txt') -AsPlainText -Force
-$publisher = Get-PfxCertificate $certPath -Password $certPass
-$msixHash = Get-CaaPublisherHash $publisher.Subject
+$certInfo = Get-PfxCertificate $certPath -Password $certPass
+$publisherName = ($certInfo -split '\r?\n')[1].Trim()
+$msixHash = Get-CaaPublisherHash $publisherName
+$PublisherDisplayName = $publisherName.Split(',')[0].Split('=')[-1]
 
-$appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object {$_.Architecture -eq 'x64' -and $_.Scope -eq 'machine'}
+$appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object { $_.Architecture -eq 'x64' -and $_.Scope -eq 'machine' }
+
+
+if ($appInfo.Count -ne 1) {
+    Write-Error "More than One Package found for $WpmPackageID"
+    return
+}
+
+if ($UseEverGreen) {
+    $evergreenAppInfo = Get-evergreenapp $EverGreenPackageID | Where-Object { $_.channel -eq 'Insider' -and $_.Architecture -eq 'x64' -and $_.Platform -eq 'win32-x64' }
+    if ($evergreenAppInfo.Count -ne 1) {
+        Write-Error "More than One Package found for $evergreenAppInfo"
+    }
+    else {
+        if ([version]$evergreenAppInfo.Version -gt [version]$appInfo.PackageVersion) {
+            $appInfo.PackageVersion = $evergreenAppInfo.Version
+            $appInfo.InstallerUrl = $evergreenAppInfo.URI
+        }
+    }
+}
+
 
 $installerFileName = $appInfo.InstallerUrl.Split('/')[-1]
 
 # Not using Join-Path as there are nore than 2 items
 $installerFilePath = [IO.Path]::Combine($installerShare, $appInfo.PackageIdentifier, $appInfo.PackageVersion, $installerFileName)
 
-if (-not (Test-Path $installerFilePath)){
+if (-not (Test-Path $installerFilePath)) {
     $outFile = Join-Path $env:TEMP $installerFileName
     Invoke-WebRequest -Uri $appInfo.InstallerUrl -OutFile $outFile
     Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
@@ -45,12 +70,25 @@ $formattedVersion = Format-CaaVersion -Version $appInfo.PackageVersion
 $FullName = New-CaaMsixFullName -PackageIdentifier $appInfo.PackageIdentifier -Version $formattedVersion.Version -Architecture $appInfo.Architecture -CertHash $msixHash
 
 $packageSaveLocation = Join-Path $tempPath ($FullName.Name + '.msix')
+$templateSaveLocation = Join-Path $tempPath ($FullName.Name + '.xml')
 
 $templateFile = $appInfo.PackageIdentifier + '.xml'
 
 $templatePath = Join-Path $templateShare $templateFile
 
-$appInfo | Update-CaaMptTemplate -Path $templatePath -InstallerPath $installerFilePath -PackageSaveLocation $packageSaveLocation -ComputerName $packagingMachine -UserName $UserName -Version $formattedVersion
+$updateParams = @{
+    Path                 = $templatePath
+    InstallerPath        = $installerFilePath
+    PackageSaveLocation  = $packageSaveLocation
+    ComputerName         = $packagingMachine
+    UserName             = $UserName
+    Version              = $formattedVersion.Version
+    PublisherName        = $publisherName
+    PublisherDisplayName = $PublisherDisplayName
+    TemplateSaveLocation = $templateSaveLocation
+}
+
+$appInfo | Update-CaaMptTemplate @updateParams
 
 $machinePass = Get-Content 'c:\JimM\machinePass.txt'
 
@@ -60,12 +98,29 @@ if (-not (Test-WSman -ComputerName $packagingMachine)) {
 }
 #TODO disable Windows search on remote machine
 
+cmdkey /generic:$packagingMachine /user:$UserName /pass:$machinePass
+
+mstsc /v:$packagingMachine
+
+while ((qwinsta /server:$packagingMachine | Where-Object { $_ -like "*$userBasic*active*" }).Count -eq 0) {
+    Start-Sleep 1
+}
+
+Start-Sleep 1
+
 & MSIXPackagingTool.exe create-package --template $templatePath --machinePassword $machinePass
+
+$userBasic = $userName.Split('@')[0]
+
+$sessionInfo = qwinsta /server:$packagingMachine | Where-Object { $_ -like "*$userBasic*active*" }
+$sessionId = $sessionInfo.split() | Where-Object { $_ -match "^\d+$" }
+LOGOFF $sessionId /server:$packagingMachine
+
 
 if (Test-Path $packageSaveLocation) {
     Move-CaaFileToVersionPath -Path $packageSaveLocation -PackageVersion $formattedVersion.Version -DestinationShare $msixShare -PackageIdentifier $appInfo.PackageIdentifier
 }
-else{
+else {
     Write-Error "$packageSaveLocation could not be found"
 }
 
