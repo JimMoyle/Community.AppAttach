@@ -22,6 +22,9 @@ Stop-Service -Name wuauserv
 
 #Enable-PSRemoting
 
+# Actual command the tool uses
+# $sessionOptions = New-PSSessionOption -SkipCNCheck
+# $persistentMPTSession = New-PSSession -ComputerName 'aapack-2.avd.tools' -Credential 'user2@avd.tools' -UseSSL -SessionOption $sessionOptions -EnableNetworkAccess 
 # Enroll machine cert
 # Activate listener for remoting
 # Make sure thumbprint on cert and listener match (Winrm enumerate winrm/config/listener)

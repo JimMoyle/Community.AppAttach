@@ -1,4 +1,4 @@
-function Move-CaaInstallerToVersionPath {
+function Move-CaaFileToVersionPath {
     [CmdletBinding()]
 
     Param (
