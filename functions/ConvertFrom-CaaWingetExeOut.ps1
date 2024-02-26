@@ -1,9 +1,17 @@
 function ConvertFrom-CaaWingetExeOut {
+    [CmdletBinding()]
     param (
-        [string]$WingetId
+        [Parameter(
+            Position = 0,
+            ValuefromPipelineByPropertyName = $true,
+            ValuefromPipeline = $true,
+            Mandatory = $true
+        )]
+        [Alias('PackageIdentifier')]
+        [string]$Id
     )
 
-    $wingetOut = Winget show --Id Git.Git
+    $wingetOut = Winget show --Id $Id
     $wingetLines = $wingetOut -Split '\r?\n'
 
     $output = [PSCustomObject]@{
@@ -18,31 +26,11 @@ function ConvertFrom-CaaWingetExeOut {
         $key = $key.Trim()
         $value = $value.Trim()
         if ([string]::IsNullOrEmpty($value)) {
-           continue
+            continue
         }
-        <##
         #TODO - Handle nested properties (if needed)
-        # Handle nested properties (if needed)
-        if ($key -contains ':') {
-            $nestedKeys = $key -split '\.'
-            $currentObject = $mainObject
-            foreach ($nestedKey in $nestedKeys) {
-                if (-not $currentObject.$nestedKey) {
-                    $currentObject | Add-Member -MemberType NoteProperty -Name $nestedKey -Value ([PSCustomObject]@{})
-                }
-                $currentObject = $currentObject.$nestedKey
-            }
-            $currentObject.Value = $value
-        }
-        else {
-            $mainObject | Add-Member -MemberType NoteProperty -Name $key -Value $value
-        }
-        ##>
         $output | Add-Member -MemberType NoteProperty -Name $key -Value $value
     }
 
     Write-Output $output
 }
-
-# Usage:
-ConvertFrom-WingetExeOut -WingetId Git.Git
