@@ -15,7 +15,7 @@ function ConvertFrom-CaaWingetExeOut {
     $wingetLines = $wingetOut -Split '\r?\n'
 
     $output = [PSCustomObject]@{
-        PackageIdentifier = $WingetId
+        PackageIdentifier = $Id
     }
 
     foreach ($line in $WingetLines) {
