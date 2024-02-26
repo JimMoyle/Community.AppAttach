@@ -1,4 +1,4 @@
-function ConvertFrom-WingetExeOut {
+function ConvertFrom-CaaWingetExeOut {
     param (
         [string]$WingetId
     )
