@@ -49,20 +49,36 @@ if ($UseEverGreen) {
         if ([version]$evergreenAppInfo.Version -gt [version]$appInfo.PackageVersion) {
             $appInfo.PackageVersion = $evergreenAppInfo.Version
             $appInfo.InstallerUrl = $evergreenAppInfo.URI
+            $appInfo.InstallerSha256 = $evergreenAppInfo.Sha256
+            $appInfo.Architecture = $evergreenAppInfo.Architecture
         }
     }
 }
-
 
 $installerFileName = $appInfo.InstallerUrl.Split('/')[-1]
 
 # Not using Join-Path as there are nore than 2 items
 $installerFilePath = [IO.Path]::Combine($installerShare, $appInfo.PackageIdentifier, $appInfo.PackageVersion, $installerFileName)
 
-if (-not (Test-Path $installerFilePath)) {
+if (Test-Path $installerFilePath){
+    if (Test-CaaSha65Hash -Path $installerFilePath -Sha256Hash $appInfo.InstallerSha256) {
+        $downloadInstaller = $false
+    }
+    else{
+        Remove-Item $installerFilePath -Force -Confirm:$false
+        $downloadInstaller = $true
+    }
+}
+
+if ($downloadInstaller) {
     $outFile = Join-Path $env:TEMP $installerFileName
     Invoke-WebRequest -Uri $appInfo.InstallerUrl -OutFile $outFile
-    Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
+    if (Test-CaaSha65Hash -Path $outFile -Sha256Hash $appInfo.InstallerSha256) {
+        Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
+    }
+    else{
+        Write-Error "SHA256Hash incorrect for downloaded file $outFile, stopping processing"
+    }
 }
 
 $formattedVersion = Format-CaaVersion -Version $appInfo.PackageVersion
