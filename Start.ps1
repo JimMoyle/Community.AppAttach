@@ -60,14 +60,17 @@ $installerFileName = $appInfo.InstallerUrl.Split('/')[-1]
 # Not using Join-Path as there are nore than 2 items
 $installerFilePath = [IO.Path]::Combine($installerShare, $appInfo.PackageIdentifier, $appInfo.PackageVersion, $installerFileName)
 
-if (Test-Path $installerFilePath){
+if (Test-Path $installerFilePath) {
     if (Test-CaaSha65Hash -Path $installerFilePath -Sha256Hash $appInfo.InstallerSha256) {
         $downloadInstaller = $false
     }
-    else{
+    else {
         Remove-Item $installerFilePath -Force -Confirm:$false
         $downloadInstaller = $true
     }
+}
+else {
+    $downloadInstaller = $true
 }
 
 if ($downloadInstaller) {
@@ -76,7 +79,7 @@ if ($downloadInstaller) {
     if (Test-CaaSha65Hash -Path $outFile -Sha256Hash $appInfo.InstallerSha256) {
         Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
     }
-    else{
+    else {
         Write-Error "SHA256Hash incorrect for downloaded file $outFile, stopping processing"
     }
 }
@@ -102,6 +105,7 @@ $updateParams = @{
     PublisherName        = $publisherName
     PublisherDisplayName = $PublisherDisplayName
     TemplateSaveLocation = $templateSaveLocation
+    NoTemplate           = $true
 }
 
 $appInfo | Update-CaaMptTemplate @updateParams
@@ -114,7 +118,9 @@ if (-not (Test-WSman -ComputerName $packagingMachine)) {
 }
 #TODO disable Windows search on remote machine
 
-cmdkey /generic:$packagingMachine /user:$UserName /pass:$machinePass
+cmdkey /generic:$packagingMachine /user:$UserName /pass:$machinePass | Out-Null
+
+Disconnect-CaaRdpSession -packagingMachine $packagingMachine -UserName $UserName
 
 mstsc /v:$packagingMachine
 
@@ -126,12 +132,7 @@ Start-Sleep 1
 
 & MSIXPackagingTool.exe create-package --template $templatePath --machinePassword $machinePass
 
-$userBasic = $userName.Split('@')[0]
-
-$sessionInfo = qwinsta /server:$packagingMachine | Where-Object { $_ -like "*$userBasic*active*" }
-$sessionId = $sessionInfo.split() | Where-Object { $_ -match "^\d+$" }
-LOGOFF $sessionId /server:$packagingMachine
-
+Disconnect-CaaRdpSession -packagingMachine $packagingMachine -UserName $UserName
 
 if (Test-Path $packageSaveLocation) {
     Move-CaaFileToVersionPath -Path $packageSaveLocation -PackageVersion $formattedVersion.Version -DestinationShare $msixShare -PackageIdentifier $appInfo.PackageIdentifier

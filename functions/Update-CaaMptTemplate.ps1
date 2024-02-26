@@ -71,7 +71,14 @@ function Update-CaaMptTemplate {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [String]$ShortDescription
+        [String]$ShortDescription,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [Switch]$NoTemplate
+
+        
     )
 
     # Read the XML file
@@ -95,7 +102,7 @@ function Update-CaaMptTemplate {
     $template.MsixPackagingToolTemplate.SaveLocation.PackagePath = $PackageSaveLocation
 
     if ($TemplateSaveLocation){
-        $template.MsixPackagingToolTemplate.PackageInformation.TemplatePath = $TemplateSaveLocation
+        $template.MsixPackagingToolTemplate.SaveLocation.TemplatePath = $TemplateSaveLocation
     }
     
     if ($ShortDescription){
