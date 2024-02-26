@@ -61,7 +61,7 @@ $installerFileName = $appInfo.InstallerUrl.Split('/')[-1]
 $installerFilePath = [IO.Path]::Combine($installerShare, $appInfo.PackageIdentifier, $appInfo.PackageVersion, $installerFileName)
 
 if (Test-Path $installerFilePath) {
-    if (Test-CaaSha65Hash -Path $installerFilePath -Sha256Hash $appInfo.InstallerSha256) {
+    if (Test-CaaSha256Hash -Path $installerFilePath -Sha256Hash $appInfo.InstallerSha256) {
         $downloadInstaller = $false
     }
     else {
@@ -76,7 +76,7 @@ else {
 if ($downloadInstaller) {
     $outFile = Join-Path $env:TEMP $installerFileName
     Invoke-WebRequest -Uri $appInfo.InstallerUrl -OutFile $outFile
-    if (Test-CaaSha65Hash -Path $outFile -Sha256Hash $appInfo.InstallerSha256) {
+    if (Test-CaaSha256Hash -Path $outFile -Sha256Hash $appInfo.InstallerSha256) {
         Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
     }
     else {

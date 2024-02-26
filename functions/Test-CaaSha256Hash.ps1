@@ -1,4 +1,4 @@
-function Test-CaaSha65Hash {
+function Test-CaaSha256Hash {
     [CmdletBinding()]
     param (
         [Parameter(
