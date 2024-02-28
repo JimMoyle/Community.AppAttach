@@ -20,6 +20,12 @@ function Test-CaaSha256Hash {
             ValuefromPipelineByPropertyName = $true,
             Mandatory = $true
         )]
+        [ValidateScript({
+            if  ($_ -notmatch "^[A-Fa-f0-9]{64}$"){
+                throw "This doesn't appear to match a correct SHA256 format"
+            }
+            return $true
+        })]
         [System.String]$Sha256Hash
     )
     

@@ -26,11 +26,11 @@ function Get-CaaSilentInstall {
         $generic = switch ($InstallerType) {
             'inno' { '/VERYSILENT'; break }
             'msi' { '/qn'; break }
+            'nullsoft' { '/S' ; break }
+            'wix' { '/quiet' ; break }
+            'burn' {}
             'exe' {}
             'zip'{}
-            'nullsoft' {}
-            'wix' {}
-            'burn' {}
             'pwa' {}
             'portable' {}
             Default {}

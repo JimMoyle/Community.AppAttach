@@ -81,9 +81,7 @@ function Update-CaaMptTemplate {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [Switch]$NoTemplate
-
-        
+        [Switch]$NoTemplate        
     )
 
     # Read the XML file
@@ -145,26 +143,6 @@ function Update-CaaMptTemplate {
         $template.MsixPackagingToolTemplate.RemoteMachine.UserName = $UserName
     }
 
-    # TODO add install arguments
-
-
-    <##
-    # TODO DeviceGuardSigning
-    if ( $null -eq $template.MsixPackagingToolTemplate.RemoteMachine ) {
-        #build new node by hand and force it to be an XML object with the relevant schema changes v2: v3: etc.
-        $remoteXmlText = "<RemoteMachine ComputerName=`"$ComputerName`" Username=`"$UserName`"/>"
-        [xml]$remoteXmlNode = "<dummySchema xmlns='http://schemas.microsoft.com/msix/msixpackagingtool/template/1904'>$remoteXmlText</dummySchema>"
-
-        $foundNode = $template.MsixPackagingToolTemplate.Installer
-        $importNode = $template.ImportNode($remoteXmlNode.dummySchema.RemoteMachine, $true)
-        $template.MsixPackagingToolTemplate.InsertAfter($importNode, $foundNode)
-    }
-    else{
-        $template.MsixPackagingToolTemplate.RemoteMachine.ComputerName = $ComputerName
-        $template.MsixPackagingToolTemplate.RemoteMachine.UserName = $UserName
-    }
-   ##>
-
     if (-not ($PackageDisplayName)){
         $nameSplit = $template.MsixPackagingToolTemplate.PackageInformation.PackageName.Split('.')
         if ($nameSplit.Count -gt 1){
@@ -174,7 +152,6 @@ function Update-CaaMptTemplate {
         }
         $PackageDisplayName = $PackageDisplayName.TrimEnd('.')
     }
-
 
     # Save the modified XML to the output path
     $template.Save($Path)

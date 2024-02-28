@@ -8,21 +8,26 @@ function ConvertFrom-CaaWingetExeOut {
             Mandatory = $true
         )]
         [Alias('PackageIdentifier')]
-        [string]$Id
+        [string]$Id,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [string]$InstallerType
+
     )
     begin {
         Set-StrictMode -Version Latest
     }
     process {
 
-        <##
-        
-        Installers =         
+        if ($InstallerType){
+            $wingetOut = Winget show --Id $Id --Installer-Type $InstallerType
+        }
+        else{
+            $wingetOut = Winget show --Id $Id 
+        }
 
-        
-        ##>
-
-        $wingetOut = Winget show --Id $Id
         $wingetLines = $wingetOut -Split '\r?\n'
 
         $output = [PSCustomObject]@{

@@ -11,7 +11,7 @@ function Get-CaaWpmRestApp {
             Mandatory = $true
         )]
         [Alias('PackageIdentifier')]
-        [System.String]$ID,
+        [System.String]$Id,
 
         [Parameter(
             ValuefromPipelineByPropertyName = $true

@@ -1,6 +1,6 @@
+#region Dot source the files
 $Functions = @( Get-ChildItem -Path Functions\*.ps1 -ErrorAction SilentlyContinue )
 
-#Dot source the files
 Foreach ($import in $Functions) {
     Try {
         Write-Information "Importing $($Import.FullName)"
@@ -10,6 +10,7 @@ Foreach ($import in $Functions) {
         Write-Error -Message "Failed to import function $($import.fullname): $_"
     }
 }
+#endregion
 
 #region Parameters
 
@@ -44,10 +45,8 @@ $PublisherDisplayName = $publisherName.Split('=')[-1]
 
 #endregion
 
-
 #region Find App
 $appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object { $_.Architecture -eq 'x64' -and $_.Scope -eq 'machine' }
-
 
 if ($appInfo.Count -ne 1) {
     Write-Error "More than One Package found for $WpmPackageID"
@@ -72,7 +71,7 @@ if ($UseEverGreen) {
 if ($UseWingetexe) {
     # TODO Check for MSIX or Appx
     # TODO fix this
-    $wingetexeAppInfo = #Get-evergreenapp $EverGreenPackageID | Where-Object { $_.channel -eq 'Insider' -and $_.Architecture -eq 'x64' -and $_.Platform -eq 'win32-x64' }
+    $wingetexeAppInfo = 
     if ($wingetexeAppInfo.Count -ne 1) {
         Write-Error "More than One Package found for $evergreenAppInfo"
     }
