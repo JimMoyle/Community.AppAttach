@@ -38,7 +38,5 @@ function Test-CaaSha256Hash {
         }
     }
     
-    end {
-        
-    }
+    end {}
 }

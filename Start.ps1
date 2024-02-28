@@ -11,12 +11,14 @@ Foreach ($import in $Functions) {
     }
 }
 
+#region Parameters
+
 $UseEverGreen = $true
 $UseWingetexe = $false
 
 $EverGreenPackageID = 'MicrosoftVisualStudioCode'
 $WpmPackageID = 'Microsoft.VisualStudioCode.Insiders'
-$InstallerArguments = '/MERGETASKS=!runcode'
+#$InstallerArguments = '/MERGETASKS=!runcode'
 
 $TemplateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
 $InstallerShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Installers\'
@@ -29,6 +31,10 @@ $UserName = 'User2@avd.tools'
 
 $machinePass = Get-Content 'c:\JimM\machinePass.txt'
 
+#endregion
+
+#region GetCert Info
+
 $certPass = ConvertTo-SecureString (Get-Content 'c:\JimM\certPass.txt') -AsPlainText -Force
 $certInfo = Get-PfxData -Password $certPass -FilePath $certPath
 $certPublisher = $certInfo.EndEntityCertificates.Subject
@@ -36,6 +42,10 @@ $publisherName = $certPublisher.Trim().Split(',')[0]
 $msixHash = Get-CaaPublisherHash $certPublisher
 $PublisherDisplayName = $publisherName.Split('=')[-1]
 
+#endregion
+
+
+#region Find App
 $appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object { $_.Architecture -eq 'x64' -and $_.Scope -eq 'machine' }
 
 
@@ -94,16 +104,23 @@ else {
     $downloadInstaller = $true
 }
 
+# TODO Move Move-CaaFileToVersionPath out of region
 if ($downloadInstaller) {
     $outFile = Join-Path $env:TEMP $installerFileName
     Invoke-WebRequest -Uri $appInfo.InstallerUrl -OutFile $outFile
     if (Test-CaaSha256Hash -Path $outFile -Sha256Hash $appInfo.InstallerSha256) {
-        Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
+        
     }
     else {
         Write-Error "SHA256Hash incorrect for downloaded file $outFile, stopping processing"
     }
 }
+
+#endregion
+
+# Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
+
+#region Update template file
 
 $formattedVersion = Format-CaaVersion -Version $appInfo.PackageVersion
 
@@ -134,6 +151,9 @@ $updateParams = @{
 
 $appInfo | Update-CaaMptTemplate @updateParams
 
+#endregion
+
+#region Convert to MSIX from installer
 
 if (-not (Test-WSman -ComputerName $packagingMachine)) {
     #Enter-PSSession -ComputerName $packagingMachine -UseSSL
@@ -145,6 +165,7 @@ cmdkey /generic:$packagingMachine /user:$UserName /pass:$machinePass | Out-Null
 
 Disconnect-CaaRdpSession -packagingMachine $packagingMachine -UserName $UserName
 
+#TODO start minimised
 mstsc /v:$packagingMachine
 
 while ((qwinsta /server:$packagingMachine | Where-Object { $_ -like "*$userBasic*active*" }).Count -eq 0) {
@@ -163,13 +184,20 @@ If ($outputPackage.ExitCode -ne 0) {
 
 Disconnect-CaaRdpSession -packagingMachine $packagingMachine -UserName $UserName
 
-if (Test-Path $packageSaveLocation) {
-    $moveInfo = Move-CaaFileToVersionPath -Path $packageSaveLocation -PackageVersion $formattedVersion.Version -DestinationShare $msixShare -PackageIdentifier $appInfo.PackageIdentifier -PassThru
-}
-else {
+Set-CaaMsixCertificate -Path $packageSaveLocation -CertificatePath $CertPath -CertificatePassword $certPass
+
+if (-not (Test-Path $packageSaveLocation)) {
     Write-Error "$packageSaveLocation could not be found"
+    return
 }
 
-Set-CaaMsixCertificate -Path $moveInfo.Path -CertificatePath $CertPath -CertificatePassword $certPass
+#endregion
+
+$moveInfo = Move-CaaFileToVersionPath -Path $packageSaveLocation -PackageVersion $formattedVersion.Version -DestinationShare $msixShare -PackageIdentifier $appInfo.PackageIdentifier -PassThru
+
+#region create App attch
+
+
+#endregion
 
 Write-Output 'Done'
