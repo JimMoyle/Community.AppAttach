@@ -61,8 +61,3 @@ function Get-WingetExeApp {
     } # process
     end {} # end
 }  #function
-. functions\ConvertFrom-CaaWingetExeOut.ps1
-#Get-WingetExeApp -Id Mozilla.Firefox
-#Get-WingetExeApp -Id BlenderFoundation.Blender
-#Get-WingetExeApp -Id 9PP3C07GTVRH
-Get-WingetExeApp -Id Not.true

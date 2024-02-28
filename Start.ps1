@@ -46,17 +46,23 @@ $PublisherDisplayName = $publisherName.Split('=')[-1]
 #endregion
 
 #region Find App
+#TODO loop till 1 left
 $appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object { $_.Architecture -eq 'x64' -and $_.Scope -eq 'machine' }
 
 if ($appInfo.Count -ne 1) {
-    Write-Error "More than One Package found for $WpmPackageID"
+    Write-Error "More than One Package found for $WpmPackageID please adjust your filter"
     return
 }
 
 if ($UseEverGreen) {
     $evergreenAppInfo = Get-evergreenapp $EverGreenPackageID | Where-Object { $_.channel -eq 'Insider' -and $_.Architecture -eq 'x64' -and $_.Platform -eq 'win32-x64' }
-    if ($evergreenAppInfo.Count -ne 1) {
-        Write-Error "More than One Package found for $evergreenAppInfo"
+    if (($evergreenAppInfo | Measure-Object).Count -gt 1) {
+        Write-Error "More than One Package found for $evergreenAppInfo please adjust your filter"
+        return
+    }
+    if (($evergreenAppInfo | Measure-Object).Count -ne 1) {
+        Write-Error "More than One Package found for $evergreenAppInfo please adjust your filter"
+        return
     }
     else {
         if ([version]$evergreenAppInfo.Version -gt [version]$appInfo.PackageVersion) {
@@ -69,19 +75,20 @@ if ($UseEverGreen) {
 }
 
 if ($UseWingetexe) {
-    # TODO Check for MSIX or Appx
-    # TODO fix this
-    $wingetexeAppInfo = 
-    if ($wingetexeAppInfo.Count -ne 1) {
-        Write-Error "More than One Package found for $evergreenAppInfo"
-    }
-    else {
-        if ([version]$wingetexeAppInfo.Version -gt [version]$appInfo.PackageVersion) {
-            $appInfo.PackageVersion = $wingetexeAppInfo.Version
-            $appInfo.InstallerUrl = $wingetexeAppInfo.URI
-            $appInfo.InstallerSha256 = $wingetexeAppInfo.Sha256
-            $appInfo.Architecture = $wingetexeAppInfo.Architecture
+    try {
+        $wingetexeAppInfo = Get-CaaWinGetExeApp -Id $WpmPackageID -ErrorAction Stop
+        if ($wingetexeAppInfo.'Installer Type' -eq 'msstore' -and $wingetexeAppInfo.PackageIdentifier -like "9*") {
+            Write-Error "MSIX present in the store with Id $PackageIdentifier but is not downloadable, please contact the vendor to obtain the MSIX file"
+            return
         }
+        if ($wingetexeAppInfo.'Installer Type' -eq 'msstore' -and $wingetexeAppInfo.PackageIdentifier -like "X*") {
+            Write-Error "Win32 app is present in the store with Id $PackageIdentifier but is not downloadable, please contact the vendor to obtain the installer"
+            return
+        }
+
+    }
+    catch {
+        'TODO: search store for a likely candidate'
     }
 }
 
