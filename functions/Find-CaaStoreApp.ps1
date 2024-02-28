@@ -16,15 +16,16 @@ function Find-CaaStoreApp {
         Set-StrictMode -Version Latest
 
         function reduceToOne {
+            [CmdletBinding()]
             param (
                 $AppList
             )
             $numberOfApps = ($AppList | Measure-Object).Count
             switch ($numberOfApps) {
-                {$numberOfApps -eq 0 } { Write-Error "$Id cannot be found in the store"; break }
-                {$numberOfApps -eq 1 } { 
+                { $numberOfApps -eq 0 } { Write-Error "$Id cannot be found in the store"; break }
+                { $numberOfApps -eq 1 } { 
                     #$storeAppInfo = Winget show --Id $isMsix --source msstore
-                    Write-Output "Found Msix application $($AppList.AppName) with Id $($AppList.PackageIdentifier) in the store, but as the store does not allow downloads, if this looks like the application you want please contact the vendor for the msix file."
+                    Write-Output "Found MSIX application $($AppList.AppName) with Id $($AppList.PackageIdentifier) in the store, but as the store does not allow downloads, if this looks like the application you want please contact the vendor for the MSIX file."
                     return
                 }
                 Default {}
@@ -32,43 +33,71 @@ function Find-CaaStoreApp {
         }
     } # begin
     process {
-        if ($id -like "*.*"){
+        if ($id -like "*.*") {
             $publisher, $appName = $Id -Split '\.' , 2
         }
-        else{
-            $appName  = $Id
+        else {
+            $appName = $Id
         }
 
         $searchStore = Winget search $appName --source msstore
 
-        $removeHeaders = $searchStore | Select-Object -Skip 2
-
-        $searchObj = foreach ($storeApp in $removeHeaders){
+        $removeHeaders = $searchStore | Where-Object { $_ -like "*unknown*" }
+        $searchObj = foreach ($storeApp in $removeHeaders) {
             $storeApp -Match "^(.*)\s(\w+)\s+Unknown$" | Out-Null
             $appObj = [PSCustomObject]@{
-                AppName = $matches[1].Trim()
+                AppName           = $matches[1].Trim()
                 PackageIdentifier = $matches[2].Trim()
             }
             Write-Output $appObj
         }
 
-        $isMsix = $searchObj | Where-Object {$_.PackageIdentifier -like "9*"}
+        if (($appObj | Measure-Object).Count -eq 0) {
+            Write-Error "$Id cannot be found in the store"
+            return
+        }
 
-        reduceToOne -AppList $isMsix
+        $isMsix = $searchObj | Where-Object { $_.PackageIdentifier -like "9*" }
+        try {
+            reduceToOne -AppList $isMsix        
+        }
+        catch {
+            foreach ($appItem in $isMoreLikeName) {
+                Write-Output "Found MSIX application $($appItem.AppName) with Id $($appItem.PackageIdentifier) in the store, but as the store does not allow downloads, if this looks like the application you want please contact the vendor for the MSIX file."
+            }
+        }
 
-        $isLikeName = $isMsix | Where-Object {$_.AppName -like "*$appName*" }
+        $isLikeName = $isMsix | Where-Object { $_.AppName -like "*$appName*" }
+        try {
+            reduceToOne -AppList $isLikeName -ErrorAction Stop
+        }
+        catch {
+            foreach ($appItem in $isMsix) {
+                Write-Output "Found MSIX application $($appItem.AppName) with Id $($appItem.PackageIdentifier) in the store, but as the store does not allow downloads, if this looks like the application you want please contact the vendor for the MSIX file."
+            }
+        }
 
-        reduceToOne -AppList $isLikeName
+        $isMoreLikeName = $isLikeName | Where-Object { $_.AppName -Like "*$appName" -or $_.AppName -Like "$appName*" }
+        try {
+            reduceToOne -AppList $isMoreLikeName -ErrorAction Stop
+        }
+        catch {
+            foreach ($appItem in $isLikeName) {
+                Write-Output "Found MSIX application $($appItem.AppName) with Id $($appItem.PackageIdentifier) in the store, but as the store does not allow downloads, if this looks like the application you want please contact the vendor for the MSIX file."
+            }
+        }
 
-        $isMoreLikeName = $isLikeName | Where-Object {$_.AppName -Like "*$appName" -or $_.AppName -Like "$appName*" }
+        $isExactName = $isMoreLikeName | Where-Object { $_.AppName -eq $appName }
 
-        reduceToOne -AppList $isMoreLikeName
-
-        $isExactName = $isMoreLikeName | Where-Object {$_.AppName -eq $appName }
-
-        reduceToOne -AppList $isExactName
-
-    
+        try {
+            reduceToOne -AppList $isExactName -ErrorAction Stop
+        }
+        catch {
+            foreach ($appItem in $isMoreLikeName) {
+                Write-Output "Found MSIX application $($appItem.AppName) with Id $($appItem.PackageIdentifier) in the store, but as the store does not allow downloads, if this looks like the application you want please contact the vendor for the MSIX file."
+            }
+        }
+ 
     } # process
     end {} # end
 }  #function
