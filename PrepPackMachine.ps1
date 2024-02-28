@@ -17,10 +17,16 @@ Unblock-File $msixFileInfo.FullName
 Add-AppxPackage -Path $msixFileInfo.FullName
 Set-Service -Name WSearch -StartupType Disabled
 Stop-Service -Name WSearch
+Enable-PSRemoting -force
+New-NetFirewallRule -DisplayName “ICMPv4” -Direction Inbound -Action Allow -Protocol icmpv4 -Enabled True
 Set-Service -Name wuauserv -StartupType Disabled
 Stop-Service -Name wuauserv
 
 #Enable-PSRemoting
+
+# Enables PowerShell Remoting
+# Enable-PSRemoting -force
+# New-NetFirewallRule -DisplayName “ICMPv4” -Direction Inbound -Action Allow -Protocol icmpv4 -Enabled True
 
 # Actual command the tool uses
 # $sessionOptions = New-PSSessionOption -SkipCNCheck

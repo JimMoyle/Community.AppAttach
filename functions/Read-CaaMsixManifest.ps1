@@ -96,10 +96,10 @@ function Read-CaaMsixManifest {
         }
 
         if ($xml.psobject.Properties.Name -contains 'Bundle') {
-            $output = $xml.Bundle | Select-Object Identity
+            $output = $xml.Bundle | Select-Object Identity, Properties, Resources, Dependencies, Capabilities, Applications
         }
         else {
-            $output = $xml.Package | Select-Object Identity
+            $output = $xml.Package | Select-Object Identity, Properties, Resources, Dependencies, Capabilities, Applications
         }
         Write-Output $output
     } # process

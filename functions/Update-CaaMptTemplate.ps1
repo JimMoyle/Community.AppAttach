@@ -56,6 +56,11 @@ function Update-CaaMptTemplate {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
+        [String]$InstallerSwitches,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
         [String]$PublisherName,
 
         [Parameter(
@@ -121,6 +126,10 @@ function Update-CaaMptTemplate {
         $template.MsixPackagingToolTemplate.Settings.GenerateCommandLineFile = 'false'
     }
 
+    if ($InstallerSwitches){
+        $template.MsixPackagingToolTemplate.Installer.Arguments = $InstallerSwitches
+    }
+
     # This section isn't there by default in the template so we need to create it if needed
     if ( $null -eq $template.MsixPackagingToolTemplate.RemoteMachine ) {
         #build new node by hand and force it to be an XML object with the relevant schema changes v2: v3: etc.
@@ -135,6 +144,8 @@ function Update-CaaMptTemplate {
         $template.MsixPackagingToolTemplate.RemoteMachine.ComputerName = $ComputerName
         $template.MsixPackagingToolTemplate.RemoteMachine.UserName = $UserName
     }
+
+    # TODO add install arguments
 
 
     <##

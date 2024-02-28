@@ -12,25 +12,29 @@ Foreach ($import in $Functions) {
 }
 
 $UseEverGreen = $true
+$UseWingetexe = $false
 
 $EverGreenPackageID = 'MicrosoftVisualStudioCode'
 $WpmPackageID = 'Microsoft.VisualStudioCode.Insiders'
+$InstallerArguments = '/MERGETASKS=!runcode'
 
-$templateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
-$installerShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Installers\'
-$msixShare = '\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\'
-$certPath = "\\avdtoolsmsix.file.core.windows.net\appattach\Templates\JimAdmin.pfx"
-$tempPath = $env:TEMP
+$TemplateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
+$InstallerShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Installers\'
+$MsixShare = '\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\'
+$CertPath = "\\avdtoolsmsix.file.core.windows.net\appattach\Templates\JimAdmin.pfx"
+$TempPath = $env:TEMP
 
 $packagingMachine = 'AAPack-2.AVD.Tools'
 $UserName = 'User2@avd.tools'
-$timeStampServer = 'http://timestamp.digicert.com'
+
+$machinePass = Get-Content 'c:\JimM\machinePass.txt'
 
 $certPass = ConvertTo-SecureString (Get-Content 'c:\JimM\certPass.txt') -AsPlainText -Force
-$certInfo = Get-PfxCertificate $certPath -Password $certPass
-$publisherName = ($certInfo -split '\r?\n')[1].Trim()
-$msixHash = Get-CaaPublisherHash $publisherName
-$PublisherDisplayName = $publisherName.Split(',')[0].Split('=')[-1]
+$certInfo = Get-PfxData -Password $certPass -FilePath $certPath
+$certPublisher = $certInfo.EndEntityCertificates.Subject
+$publisherName = $certPublisher.Trim().Split(',')[0]
+$msixHash = Get-CaaPublisherHash $certPublisher
+$PublisherDisplayName = $publisherName.Split('=')[-1]
 
 $appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object { $_.Architecture -eq 'x64' -and $_.Scope -eq 'machine' }
 
@@ -51,6 +55,23 @@ if ($UseEverGreen) {
             $appInfo.InstallerUrl = $evergreenAppInfo.URI
             $appInfo.InstallerSha256 = $evergreenAppInfo.Sha256
             $appInfo.Architecture = $evergreenAppInfo.Architecture
+        }
+    }
+}
+
+if ($UseWingetexe) {
+    # TODO Check for MSIX or Appx
+    # TODO fix this
+    $wingetexeAppInfo = #Get-evergreenapp $EverGreenPackageID | Where-Object { $_.channel -eq 'Insider' -and $_.Architecture -eq 'x64' -and $_.Platform -eq 'win32-x64' }
+    if ($wingetexeAppInfo.Count -ne 1) {
+        Write-Error "More than One Package found for $evergreenAppInfo"
+    }
+    else {
+        if ([version]$wingetexeAppInfo.Version -gt [version]$appInfo.PackageVersion) {
+            $appInfo.PackageVersion = $wingetexeAppInfo.Version
+            $appInfo.InstallerUrl = $wingetexeAppInfo.URI
+            $appInfo.InstallerSha256 = $wingetexeAppInfo.Sha256
+            $appInfo.Architecture = $wingetexeAppInfo.Architecture
         }
     }
 }
@@ -95,6 +116,8 @@ $templateFile = $appInfo.PackageIdentifier + '.xml'
 
 $templatePath = Join-Path $templateShare $templateFile
 
+$silentInstall = Get-CaaSilentInstall -InstallerType $appInfo.InstallerType -InstallerSwitches $appInfo.InstallerSwitches.custom
+
 $updateParams = @{
     Path                 = $templatePath
     InstallerPath        = $installerFilePath
@@ -102,15 +125,15 @@ $updateParams = @{
     ComputerName         = $packagingMachine
     UserName             = $UserName
     Version              = $formattedVersion.Version
-    PublisherName        = $publisherName
+    PublisherName        = $certPublisher
     PublisherDisplayName = $PublisherDisplayName
     TemplateSaveLocation = $templateSaveLocation
     NoTemplate           = $true
+    InstallerSwitches    = $silentInstall
 }
 
 $appInfo | Update-CaaMptTemplate @updateParams
 
-$machinePass = Get-Content 'c:\JimM\machinePass.txt'
 
 if (-not (Test-WSman -ComputerName $packagingMachine)) {
     #Enter-PSSession -ComputerName $packagingMachine -UseSSL
@@ -130,15 +153,23 @@ while ((qwinsta /server:$packagingMachine | Where-Object { $_ -like "*$userBasic
 
 Start-Sleep 1
 
-& MSIXPackagingTool.exe create-package --template $templatePath --machinePassword $machinePass
+$outputPackage = Start-Process MSIXPackagingTool.exe -ArgumentList "create-package --template $templatePath --machinePassword $machinePass" -Wait -Passthru -NoNewWindow
+
+If ($outputPackage.ExitCode -ne 0) {
+    Write-Error 'TODO: Write_Error'
+    Disconnect-CaaRdpSession -packagingMachine $packagingMachine -UserName $UserName
+    return
+}
 
 Disconnect-CaaRdpSession -packagingMachine $packagingMachine -UserName $UserName
 
 if (Test-Path $packageSaveLocation) {
-    Move-CaaFileToVersionPath -Path $packageSaveLocation -PackageVersion $formattedVersion.Version -DestinationShare $msixShare -PackageIdentifier $appInfo.PackageIdentifier
+    $moveInfo = Move-CaaFileToVersionPath -Path $packageSaveLocation -PackageVersion $formattedVersion.Version -DestinationShare $msixShare -PackageIdentifier $appInfo.PackageIdentifier -PassThru
 }
 else {
     Write-Error "$packageSaveLocation could not be found"
 }
+
+Set-CaaMsixCertificate -Path $moveInfo.Path -CertificatePath $CertPath -CertificatePassword $certPass
 
 Write-Output 'Done'

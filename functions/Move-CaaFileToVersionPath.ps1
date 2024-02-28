@@ -68,12 +68,12 @@ function Move-CaaFileToVersionPath {
 
         If ($PassThru) {
 
-            $out = [PSCustomObject]@{
-                Name    = $PackageName
+            $output = [PSCustomObject]@{
+                Name    = $PackageIdentifier
                 Version = $PackageVersion
                 Path = $destLoc
             }
-            Write-Output $out
+            Write-Output $output
         }          
     } # process
     end {} # end

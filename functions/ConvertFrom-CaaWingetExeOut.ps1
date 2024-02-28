@@ -15,6 +15,13 @@ function ConvertFrom-CaaWingetExeOut {
     }
     process {
 
+        <##
+        
+        Installers =         
+
+        
+        ##>
+
         $wingetOut = Winget show --Id $Id
         $wingetLines = $wingetOut -Split '\r?\n'
 
