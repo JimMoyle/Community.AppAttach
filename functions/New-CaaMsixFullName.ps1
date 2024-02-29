@@ -49,20 +49,17 @@ function New-CaaMsixFullName {
         Sometimes there is a ~ between the last two _ I don't know why.
         #>
 
-        switch ($PsCmdlet.ParameterSetName){
-            'FullName' {
-                $output = [PSCustomObject]@{
-                    PSTypeName = 'Caa.MsixFullName'
-                    Name       = "{0}_{1}_{2}__{3}" -f $identifier, $Version.ToString(), $Architecture, $CertHash
-                }
-            }
-            'FamilyName' {
-                $output = [PSCustomObject]@{
-                    PSTypeName = 'Caa.MsixFamilyName'
-                    Name = "{0}_{3}" -f $identifier, $CertHash
-                    }
-            }
+        if ($PsCmdlet.ParameterSetName = 'FamilyName') {
 
+            $name = "{0}_{3}" -f $identifier, $CertHash
+        }
+        else {
+            $name = "{0}_{1}_{2}__{3}" -f $identifier, $Version.ToString(), $Architecture, $CertHash
+        }
+
+        $output = [PSCustomObject]@{
+            PSTypeName = 'Caa.MsixName'
+            Name       = $name
         }
 
         Write-Output $output
