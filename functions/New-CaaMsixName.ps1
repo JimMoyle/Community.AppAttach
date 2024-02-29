@@ -21,7 +21,7 @@ function New-CaaMsixName {
             ValuefromPipelineByPropertyName = $true
         )]
         [Alias('PackageVersion')]
-        [ValidateScript({ if ($_.ToString().Split('.').Count -eq 4) { return $true }; throw 'Value must not contain spaces.' })]
+        [ValidateScript({ if ($_.ToString().Split('.').Count -eq 4) { return $true }; throw 'Value must be a four part version eg 1.2.3.4' })]
         [Version]$Version,
 
         [Parameter(
