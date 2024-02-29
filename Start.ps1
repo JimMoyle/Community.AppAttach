@@ -15,7 +15,7 @@ Foreach ($import in $Functions) {
 #region Parameters
 
 $UseEverGreen = $true
-$UseWingetexe = $false
+$UseWingetexe = $true
 
 $EverGreenPackageID = 'MicrosoftVisualStudioCode'
 $WpmPackageID = 'Microsoft.VisualStudioCode.Insiders'
@@ -114,11 +114,9 @@ else {
 if ($downloadInstaller) {
     $outFile = Join-Path $env:TEMP $installerFileName
     Invoke-WebRequest -Uri $appInfo.InstallerUrl -OutFile $outFile
-    if (Test-CaaSha256Hash -Path $outFile -Sha256Hash $appInfo.InstallerSha256) {
-        
-    }
-    else {
+    if (-not (Test-CaaSha256Hash -Path $outFile -Sha256Hash $appInfo.InstallerSha256)) {
         Write-Error "SHA256Hash incorrect for downloaded file $outFile, stopping processing"
+        return
     }
 }
 
@@ -130,7 +128,8 @@ if ($downloadInstaller) {
 
 $formattedVersion = Format-CaaVersion -Version $appInfo.PackageVersion
 
-$FullName = New-CaaMsixFullName -PackageIdentifier $appInfo.PackageIdentifier -Version $formattedVersion.Version -Architecture $appInfo.Architecture -CertHash $msixHash
+$fullName = New-CaaMsixFullName -PackageIdentifier $appInfo.PackageIdentifier -Version $formattedVersion.Version -Architecture $appInfo.Architecture -CertHash $msixHash
+
 
 $packageSaveLocation = Join-Path $tempPath ($FullName.Name + '.msix')
 $templateSaveLocation = Join-Path $tempPath ($FullName.Name + '.xml')
@@ -201,9 +200,18 @@ if (-not (Test-Path $packageSaveLocation)) {
 
 $moveInfo = Move-CaaFileToVersionPath -Path $packageSaveLocation -PackageVersion $formattedVersion.Version -DestinationShare $msixShare -PackageIdentifier $appInfo.PackageIdentifier -PassThru
 
-#region create App attch
+#region create App attach
+$manifest = Read-CaaMsixManifest -Path "\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\Microsoft.VisualStudioCode.Insiders\1.87.0.0\Microsoft.VisualStudioCode.Insiders_1.87.0.0_x64__479h0rr4v8y2t.msix"
+$familyName = $manifest.Identity.Name + '_' + (Get-CaaPublisherHash $manifest.Identity.Publisher)
 
+Import-AzWvdAppAttachPackageInfo
 
+if ((Get-AzWvdAppAttachPackage | Where-Object {$_.ImagePackageFamilyName -eq $familyName} | Measure-Object).Count -eq 0 ){
+    New-AzWvdAppAttachPackage #Something
+}
+else{
+    Update-AzWvdMsixPackage #something
+}
 #endregion
 
 Write-Output 'Done'

@@ -1,4 +1,4 @@
-function Find-CaaStoreApp {
+function Find-CaaMsixStoreApp {
     [CmdletBinding()]
 
     Param (

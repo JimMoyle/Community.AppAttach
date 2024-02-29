@@ -1,9 +1,7 @@
 function New-CaaMsixFullName {
     [CmdletBinding()]
     param (
-
         [Parameter(
-            ParameterSetName = 'PackageIdentifier',
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true
         )]
@@ -11,22 +9,7 @@ function New-CaaMsixFullName {
         [String]$PackageIdentifier,
 
         [Parameter(
-            ParameterSetName = 'Publisher AppName',
-            Mandatory = $true,
-            ValuefromPipelineByPropertyName = $true
-        )]
-        [ValidateScript({ if ($_ -notmatch ' ') { return $true }; throw 'Value must not contain spaces.' })]
-        [String]$Publisher,
-
-        [Parameter(
-            ParameterSetName = 'Publisher AppName',
-            Mandatory = $true,
-            ValuefromPipelineByPropertyName = $true
-        )]
-        [ValidateScript({ if ($_ -notmatch ' ') { return $true }; throw 'Value must not contain spaces.' })]
-        [String]$AppName,
-
-        [Parameter(
+            ParameterSetName = 'FullName',
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true
         )]
@@ -35,6 +18,7 @@ function New-CaaMsixFullName {
         [Version]$Version,
 
         [Parameter(
+            ParameterSetName = 'FullName',
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true
         )]
@@ -45,14 +29,11 @@ function New-CaaMsixFullName {
             Mandatory = $true,
             ValuefromPipelineByPropertyName = $true
         )]
-        [ValidateLength(13,13)]
+        [ValidateLength(13, 13)]
         [string]$CertHash
-
     )
     
-    begin {
-        
-    }
+    begin {}
     
     process {
         <##
@@ -68,22 +49,24 @@ function New-CaaMsixFullName {
         Sometimes there is a ~ between the last two _ I don't know why.
         #>
 
-        #This function only exists for the parameter validation
-
-        switch ($PsCmdlet.ParameterSetName) {
-            'PackageIdentifier' { $identifier = $PackageIdentifier; break }
-            'Publisher AppName' {$identifier = $Publisher + '.' + $AppName; break}
+        switch ($PsCmdlet.ParameterSetName){
+            'FullName' {
+                $output = [PSCustomObject]@{
+                    PSTypeName = 'Caa.MsixFullName'
+                    Name       = "{0}_{1}_{2}__{3}" -f $identifier, $Version.ToString(), $Architecture, $CertHash
+                }
+            }
+            'FamilyName' {
+                $output = [PSCustomObject]@{
+                    PSTypeName = 'Caa.MsixFamilyName'
+                    Name = "{0}_{3}" -f $identifier, $CertHash
+                    }
             }
 
-        $output = [PSCustomObject]@{
-            PSTypeName = 'Caa.MsixFullName'
-            Name = "{0}_{1}_{2}__{3}" -f $identifier, $Version.ToString(), $Architecture, $CertHash
         }
 
         Write-Output $output
     }
     
-    end {
-        
-    }
+    end {}
 }

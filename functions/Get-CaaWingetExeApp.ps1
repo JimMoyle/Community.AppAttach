@@ -1,4 +1,4 @@
-function Get-WingetExeApp {
+function Get-CaaWingetExeApp {
     [CmdletBinding()]
 
     Param (
