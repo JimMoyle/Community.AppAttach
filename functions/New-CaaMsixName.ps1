@@ -1,4 +1,4 @@
-function New-CaaMsixFullName {
+function New-CaaMsixName {
     [CmdletBinding()]
     param (
         [Parameter(
@@ -7,6 +7,13 @@ function New-CaaMsixFullName {
         )]
         [ValidateScript({ if ($_ -like '*.*') { return $true }; throw 'Value must be PublisherName.AppName' })]
         [String]$PackageIdentifier,
+
+        [Parameter(
+            Mandatory = $true,
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [ValidateLength(13, 13)]
+        [string]$CertHash,
 
         [Parameter(
             ParameterSetName = 'FullName',
@@ -23,14 +30,8 @@ function New-CaaMsixFullName {
             ValuefromPipelineByPropertyName = $true
         )]
         [ValidateSet('x86', 'x64', 'neutral', 'ARM64', 'ARM')]
-        [String]$Architecture,
+        [String]$Architecture
 
-        [Parameter(
-            Mandatory = $true,
-            ValuefromPipelineByPropertyName = $true
-        )]
-        [ValidateLength(13, 13)]
-        [string]$CertHash
     )
     
     begin {}
