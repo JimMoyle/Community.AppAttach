@@ -1,5 +1,5 @@
 function New-CaaMsixName {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'FamilyName')]
     param (
         [Parameter(
             Mandatory = $true,
@@ -50,12 +50,12 @@ function New-CaaMsixName {
         Sometimes there is a ~ between the last two _ I don't know why.
         #>
 
-        if ($PsCmdlet.ParameterSetName = 'FamilyName') {
+        if ($PsCmdlet.ParameterSetName -eq 'FamilyName') {
 
-            $name = "{0}_{3}" -f $identifier, $CertHash
+            $name = "{0}_{1}" -f $PackageIdentifier, $CertHash
         }
         else {
-            $name = "{0}_{1}_{2}__{3}" -f $identifier, $Version.ToString(), $Architecture, $CertHash
+            $name = "{0}_{1}_{2}__{3}" -f $PackageIdentifier, $Version.ToString(), $Architecture, $CertHash
         }
 
         $output = [PSCustomObject]@{

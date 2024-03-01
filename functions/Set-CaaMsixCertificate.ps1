@@ -54,6 +54,7 @@ function Set-CaaMsixCertificate {
         Set-StrictMode -Version Latest
     }
     process {
+        #Set-AuthenticodeSignature does not appear tp work with msix applications.
         if (-not($SignToolPath)) {
             
             $SignToolPath = Get-ChildItem "$Env:ProgramFiles\WindowsApps" -Recurse -Include 'Signtool.exe'

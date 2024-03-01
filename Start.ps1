@@ -19,7 +19,6 @@ $UseWingetexe = $true
 
 $EverGreenPackageID = 'MicrosoftVisualStudioCode'
 $WpmPackageID = 'Microsoft.VisualStudioCode.Insiders'
-#$InstallerArguments = '/MERGETASKS=!runcode'
 
 $TemplateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
 $InstallerShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Installers\'
@@ -122,14 +121,13 @@ if ($downloadInstaller) {
 
 #endregion
 
-# Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
+Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
 
 #region Update template file
 
 $formattedVersion = Format-CaaVersion -Version $appInfo.PackageVersion
 
-$fullName = New-CaaMsixFullName -PackageIdentifier $appInfo.PackageIdentifier -Version $formattedVersion.Version -Architecture $appInfo.Architecture -CertHash $msixHash
-
+$fullName = New-CaaMsixName -PackageIdentifier $appInfo.PackageIdentifier -Version $formattedVersion.Version -Architecture $appInfo.Architecture -CertHash $msixHash
 
 $packageSaveLocation = Join-Path $tempPath ($FullName.Name + '.msix')
 $templateSaveLocation = Join-Path $tempPath ($FullName.Name + '.xml')
@@ -201,16 +199,23 @@ if (-not (Test-Path $packageSaveLocation)) {
 $moveInfo = Move-CaaFileToVersionPath -Path $packageSaveLocation -PackageVersion $formattedVersion.Version -DestinationShare $msixShare -PackageIdentifier $appInfo.PackageIdentifier -PassThru
 
 #region create App attach
-$manifest = Read-CaaMsixManifest -Path "\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\Microsoft.VisualStudioCode.Insiders\1.87.0.0\Microsoft.VisualStudioCode.Insiders_1.87.0.0_x64__479h0rr4v8y2t.msix"
-$familyName = $manifest.Identity.Name + '_' + (Get-CaaPublisherHash $manifest.Identity.Publisher)
-
-Import-AzWvdAppAttachPackageInfo
-
-if ((Get-AzWvdAppAttachPackage | Where-Object {$_.ImagePackageFamilyName -eq $familyName} | Measure-Object).Count -eq 0 ){
-    New-AzWvdAppAttachPackage #Something
+$resourceGroup = 'DeleteMe'
+$Path = "\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\Microsoft.VisualStudioCode.Insiders\1.87.0.0\Microsoft.VisualStudioCode.Insiders_1.87.0.0_x64__479h0rr4v8y2t.msix"
+try{
+    $manifest = Read-CaaMsixManifest -Path $Path -ErrorAction Stop
 }
-else{
-    Update-AzWvdMsixPackage #something
+catch{
+    Write-Error "Manifest could not be  read from $Path, this may not be a complete Msix package."
+    Return
+}
+
+$familyName = New-CaaMsixName -PackageIdentifier $manifest.Identity.Name -CertHash (Get-CaaPublisherHash -publisherName $manifest.Identity.Publisher)
+$currentPackage = Get-AzWvdAppAttachPackage | Where-Object {$_.ImagePackageFamilyName -eq $familyName}
+
+Import-AzWvdAppAttachPackageInfo -ResourceGroupName $resourceGroup -HostPoolName 
+
+if (($currentPackage| Measure-Object).Count -eq 0 ){
+     
 }
 #endregion
 
