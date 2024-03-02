@@ -31,6 +31,8 @@ $UserName = 'User2@avd.tools'
 
 $machinePass = Get-Content 'c:\JimM\machinePass.txt'
 
+$HostPoolName = 'JimMHostPool'
+
 #endregion
 
 #region GetCert Info
@@ -212,10 +214,13 @@ catch{
 $familyName = New-CaaMsixName -PackageIdentifier $manifest.Identity.Name -CertHash (Get-CaaPublisherHash -publisherName $manifest.Identity.Publisher)
 $currentPackage = Get-AzWvdAppAttachPackage | Where-Object {$_.ImagePackageFamilyName -eq $familyName}
 
-Import-AzWvdAppAttachPackageInfo -ResourceGroupName $resourceGroup -HostPoolName 
+Import-AzWvdAppAttachPackageInfo -ResourceGroupName $resourceGroup -HostPoolName $HostPoolName
 
 if (($currentPackage| Measure-Object).Count -eq 0 ){
-     
+     New-AzWvdAppAttachPackage -ResourceGroupName $resourceGroup -HostPoolName $HostPoolName
+}
+else{
+    Update-AzWvdAppAttachPackage -ResourceGroupName $resourceGroup -HostPoolName $HostPoolName
 }
 #endregion
 
