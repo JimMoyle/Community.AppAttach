@@ -49,5 +49,3 @@ function Build-RemotePackagingMachine {
     } # process
     end {} # end
 }  #function
-
-Build-RemotePackagingMachine
