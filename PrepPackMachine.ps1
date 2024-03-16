@@ -39,6 +39,8 @@ Stop-Service -Name wuauserv
 # https://learn.microsoft.com/en-us/troubleshoot/windows-client/system-management-components/configure-winrm-for-https
 # https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_remote_troubleshooting?view=powershell-7.4
 
+#Thumbprint = 130a86b46a6d27cc5f610da2653d96d9887e327a
+
 <##
 
 param(
