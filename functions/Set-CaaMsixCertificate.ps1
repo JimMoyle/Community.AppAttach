@@ -60,11 +60,14 @@ function Set-CaaMsixCertificate {
             $SignToolPath = Get-ChildItem "$Env:ProgramFiles\WindowsApps" -Recurse -Include 'Signtool.exe'
             $fileInfo = $SignToolPath | Get-ChildItem | Where-Object {$_.DirectoryName -like "*Microsoft.MSIXPackagingTool_*_*_*_8wekyb3d8bbwe\SDK*"} | Select-Object -First 1
     
-            Copy-Item $fileInfo.DirectoryName $env:Temp -Force
-            $SignToolPath = "$env:TEMP\SDK\signtool.exe"
+            $SignToolNewPath = "$env:TEMP\SDK\signtool.exe"
+
+            if (-not(Test-Path $SignToolNewPath )){
+                Copy-Item $fileInfo.DirectoryName $env:Temp -Force -Recurse
+            }
         }
         
-        $output = Start-Process $SignToolPath -ArgumentList "sign /f $CertificatePath /p $(ConvertFrom-SecureString -AsPlainText $CertificatePassword) /fd $Encryption /tr $($TimeStampUri.AbsoluteUri) /td $Encryption $Path" -Wait -Passthru -NoNewWindow
+        $output = Start-Process $SignToolNewPath -ArgumentList "sign /f $CertificatePath /p $(ConvertFrom-SecureString -AsPlainText $CertificatePassword) /fd $Encryption /tr $($TimeStampUri.AbsoluteUri) /td $Encryption $Path" -Wait -Passthru -NoNewWindow
 
         If ($output.ExitCode -ne 0){
             # https://blogs.blackmarble.co.uk/rfennell/a-fix-for-error-signersign-failed-2146958839-0x80080209-with-signtool-exe/

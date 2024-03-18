@@ -4,7 +4,7 @@ function Get-CaaVmPrivateIpAddress {
     Param (
         [Parameter(
             Position = 0,
-            ParameterSetName = 'MyParameterSetName',
+
             ValuefromPipelineByPropertyName = $true,
             ValuefromPipeline = $true,
             Mandatory = $true
@@ -18,7 +18,7 @@ function Get-CaaVmPrivateIpAddress {
     } # begin
     process {
 
-        $vm = Get-AzVM -name Caapack 
+        $vm = Get-AzVM -name $Name
         $nic = Get-AzNetworkInterface -ResourceId $vm.NetworkProfile.NetworkInterfaces.Id
 
         if (($nic | Measure-Object).Count -ne 1){

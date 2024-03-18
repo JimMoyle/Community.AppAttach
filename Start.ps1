@@ -26,12 +26,13 @@ $MsixShare = '\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\'
 $CertPath = "\\avdtoolsmsix.file.core.windows.net\appattach\Templates\JimAdmin.pfx"
 $TempPath = $env:TEMP
 
-$packagingMachine = 'AAPack-2.AVD.Tools'
-$UserName = 'User2@avd.tools'
+#$packagingMachine = 'AAPack-2.AVD.Tools'
+$UserName = 'JimAdmin'
+$resourceGroupName = 'DeleteMe'
 
 $machinePass = Get-Content 'c:\JimM\machinePass.txt'
 
-$HostPoolName = 'JimMHostPool'
+$HostPoolName = 'MSIXPackage'
 
 #endregion
 
@@ -111,7 +112,7 @@ else {
     $downloadInstaller = $true
 }
 
-# TODO Move Move-CaaFileToVersionPath out of region
+
 if ($downloadInstaller) {
     $outFile = Join-Path $env:TEMP $installerFileName
     Invoke-WebRequest -Uri $appInfo.InstallerUrl -OutFile $outFile
@@ -119,16 +120,28 @@ if ($downloadInstaller) {
         Write-Error "SHA256Hash incorrect for downloaded file $outFile, stopping processing"
         return
     }
+    Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
 }
 
 #endregion
 
-Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $installerShare -PackageIdentifier $appInfo.PackageIdentifier
-
-
-
 #region create VM and Get IPaddress
-$ipData = Get-CaaVmPrivateIpAddress -Name $packagingMachine
+$packagingMachineName = 'CaaTest-1'
+$param = @{
+    Name                     = $packagingMachineName
+    VMSize                   = 'Standard_B2als_v2'
+    GalleryName              = 'MsixPackagerGallery'
+    ImageDefinition          = 'MsixPackagingImageDefinition'
+    ResourceGroupName        = $resourceGroupName
+    VnetName                 = 'AVDPermanent-vnet'
+    NetworkResourceGroupName = 'AVDPermanent'
+    GalleryResourceGroupName = 'AVDPermanent'
+    SubnetId                 = 'default'
+    Location                 = 'uksouth'
+}
+
+$vm = New-CaaVmFromGallery @param
+$ipData = Get-CaaVmPrivateIpAddress -Name $packagingMachineName
 $ip = $ipdata.PrivateIpAddress
 #endregion
 
@@ -168,10 +181,10 @@ $appInfo | Update-CaaMptTemplate @updateParams
 
 #region Convert to MSIX from installer
 
-if (-not (Test-WSman -ComputerName $ip)) {
-    #Enter-PSSession -ComputerName $ip -UseSSL
-    Write-Error "WinRM not avilable on $ip"
-}
+#if (-not (Test-WSman -ComputerName $ip)) {
+#Enter-PSSession -ComputerName $ip -UseSSL
+#    Write-Error "WinRM not avilable on $ip"
+#}
 #TODO disable Windows search on remote machine
 
 cmdkey /generic:$ip /user:$UserName /pass:$machinePass | Out-Null
@@ -184,33 +197,53 @@ cmdkey /generic:$ip /user:$UserName /pass:$machinePass | Out-Null
 $secStringPassword = ConvertTo-SecureString $machinePass -AsPlainText -Force
 $cred = New-Object System.Management.Automation.PSCredential ($userName, $secStringPassword)
 
+Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value $ip -Concatenate -Force
+Start-Sleep 1
 $sessionOptions = New-PSSessionOption -SkipCNCheck
-$mySession = New-PSSession -ComputerName $ip -Credential $cred -SessionOption $sessionOptions -EnableNetworkAccess
-$mySession | Enter-PSSession
-$hostName = $env:COMPUTERNAME
-# Do we need this if w ealready have the IP?
-$hostIP = ( Get-NetAdapter | Get-NetIPAddress ).IPv4Address | Out-String
-$srvCert = New-SelfSignedCertificate -DnsName $hostName, $hostIP -CertStoreLocation Cert:\LocalMachine\My
-New-Item -Path WSMan:\localhost\Listener\ -Transport HTTPS -Address * -CertificateThumbPrint $srvCert.Thumbprint -Force
-New-NetFirewallRule -Displayname 'WinRM - Powershell remoting HTTPS-In' -Name 'WinRM - Powershell remoting HTTPS-In' -Profile Any -LocalPort 5986 -Protocol TCP
-Export-Certificate -Cert $srvCert -FilePath c:\SSL_PS_Remoting.cer
-Exit-PSSession
-Copy-Item -FromSession $mySession "C:\SSL_PS_Remoting.cer" -Destination "C:\SSL_PS_Remoting.cer"
-Import-Certificate -FilePath "C:\SSL_PS_Remoting.cer" -CertStoreLocation Cert:\LocalMachine\root\
+
+$mysession = $null
+$timespan = (Get-Date).AddSeconds(30)
+
+while ($null -eq $mysession -and (Get-Date) -lt $timespan) {
+    try {
+        $mySession = New-PSSession -ComputerName $ip -Credential $cred -SessionOption $sessionOptions -EnableNetworkAccess -ErrorAction Stop
+    }
+    catch {
+        Start-Sleep 1
+    }
+}
+
+if ($null -eq $mysession){
+    Write-error "Could not connect to $ip using New-PSession"
+    return
+}
+
+$filePath = "C:\SSL_PS_Remoting.cer"
+$scriptblock = {
+    $hostName = $env:COMPUTERNAME
+    # Do we need this if w ealready have the IP?
+    $hostIP = ( Get-NetAdapter | Get-NetIPAddress ).IPv4Address | Out-String
+    $srvCert = New-SelfSignedCertificate -DnsName $hostName, $hostIP -CertStoreLocation Cert:\LocalMachine\My
+    New-Item -Path WSMan:\localhost\Listener\ -Transport HTTPS -Address * -CertificateThumbPrint $srvCert.Thumbprint -Force
+    New-NetFirewallRule -Displayname 'WinRM - Powershell remoting HTTPS-In' -Name 'WinRM - Powershell remoting HTTPS-In' -Profile Any -LocalPort 5986 -Protocol TCP
+    Export-Certificate -Cert $srvCert -FilePath c:\SSL_PS_Remoting.cer
+}
+Invoke-Command -Session $mySession -ScriptBlock $scriptblock
+Copy-Item -FromSession $mySession $filePath -Destination $filePath
+Import-Certificate -FilePath $filePath -CertStoreLocation Cert:\LocalMachine\root\
+Remove-Item $filePath -Force
 $mySession | Remove-PSSession
 
-Disconnect-CaaRdpSession -packagingMachine $ip -UserName $UserName
+#Disconnect-CaaRdpSession -packagingMachine $ip -UserName $UserName
 
 #TODO start minimised
 mstsc /v:$ip
 
-while ((qwinsta /server:$ip | Where-Object { $_ -like "*$userBasic*active*" }).Count -eq 0) {
-    Start-Sleep 1
-}
+#while ((qwinsta /server:$ip | Where-Object { $_ -like "*$userBasic*active*" }).Count -eq 0) {
+#    Start-Sleep 1
+#}
 
-Start-Sleep 1
-
-
+Start-Sleep 2
 
 $outputPackage = Start-Process MSIXPackagingTool.exe -ArgumentList "create-package --template $templatePath --machinePassword $machinePass" -Wait -Passthru -NoNewWindow
 
@@ -220,7 +253,7 @@ If ($outputPackage.ExitCode -ne 0) {
     return
 }
 
-Disconnect-CaaRdpSession -packagingMachine $ip -UserName $UserName
+#Disconnect-CaaRdpSession -packagingMachine $ip -UserName $UserName
 
 Set-CaaMsixCertificate -Path $packageSaveLocation -CertificatePath $CertPath -CertificatePassword $certPass
 
@@ -233,28 +266,36 @@ if (-not (Test-Path $packageSaveLocation)) {
 
 $moveInfo = Move-CaaFileToVersionPath -Path $packageSaveLocation -PackageVersion $formattedVersion.Version -DestinationShare $msixShare -PackageIdentifier $appInfo.PackageIdentifier -PassThru
 
+$vm | Remove-CaaVmFromGallery
+
+
 #region create App attach
-$resourceGroup = 'DeleteMe'
-$Path = "\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\Microsoft.VisualStudioCode.Insiders\1.87.0.0\Microsoft.VisualStudioCode.Insiders_1.87.0.0_x64__479h0rr4v8y2t.msix"
+
+$msixPackagePath = $moveInfo.Path
 try {
-    $manifest = Read-CaaMsixManifest -Path $Path -ErrorAction Stop
+    $manifest = Read-CaaMsixManifest -Path $msixPackagePath -ErrorAction Stop
 }
 catch {
-    Write-Error "Manifest could not be  read from $Path, this may not be a complete Msix package."
+    Write-Error "Manifest could not be read from $msixPackagePath, this may not be a complete Msix package."
     Return
 }
+
+Convert-CaaMsixToDisk -Path $msixPackagePath -DestinationPath $env:Temp
 
 $familyName = New-CaaMsixName -PackageIdentifier $manifest.Identity.Name -CertHash (Get-CaaPublisherHash -publisherName $manifest.Identity.Publisher)
 $currentPackage = Get-AzWvdAppAttachPackage | Where-Object { $_.ImagePackageFamilyName -eq $familyName }
 
-Import-AzWvdAppAttachPackageInfo -ResourceGroupName $resourceGroup -HostPoolName $HostPoolName
+Import-AzWvdAppAttachPackageInfo -ResourceGroupName $resourceGroupName -HostPoolName $HostPoolName -Path $msixPackagePath
 
 if (($currentPackage | Measure-Object).Count -eq 0 ) {
-    New-AzWvdAppAttachPackage -ResourceGroupName $resourceGroup -HostPoolName $HostPoolName
+    New-AzWvdAppAttachPackage -ResourceGroupName $resourceGroupName -HostPoolName $HostPoolName
 }
 else {
-    Update-AzWvdAppAttachPackage -ResourceGroupName $resourceGroup -HostPoolName $HostPoolName
+    Update-AzWvdAppAttachPackage -Name $currentPackage.Name -ResourceGroupName $resourceGroupName
 }
 #endregion
+
+#cleanup
+Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value '' -Force
 
 Write-Output 'Done'

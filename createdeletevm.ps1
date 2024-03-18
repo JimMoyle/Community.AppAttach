@@ -25,4 +25,6 @@ $param = @{
 
 $vm = New-CaaVmFromGallery @param
 
+$vm = $param  | Get-AzVm 
+
 $vm | Remove-CaaVmFromGallery
