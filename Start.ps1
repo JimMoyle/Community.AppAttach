@@ -23,6 +23,7 @@ $WpmPackageID = 'Microsoft.VisualStudioCode.Insiders'
 $TemplateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
 $InstallerShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Installers\'
 $MsixShare = '\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\'
+$diskImageShare = '\\avdtoolsmsix.file.core.windows.net\appattach\AppAttachPackages'
 $CertPath = "\\avdtoolsmsix.file.core.windows.net\appattach\Templates\JimAdmin.pfx"
 $TempPath = $env:TEMP
 
@@ -221,7 +222,6 @@ if ($null -eq $mysession){
 $filePath = "C:\SSL_PS_Remoting.cer"
 $scriptblock = {
     $hostName = $env:COMPUTERNAME
-    # Do we need this if w ealready have the IP?
     $hostIP = ( Get-NetAdapter | Get-NetIPAddress ).IPv4Address | Out-String
     $srvCert = New-SelfSignedCertificate -DnsName $hostName, $hostIP -CertStoreLocation Cert:\LocalMachine\My
     New-Item -Path WSMan:\localhost\Listener\ -Transport HTTPS -Address * -CertificateThumbPrint $srvCert.Thumbprint -Force
@@ -272,27 +272,9 @@ $vm | Remove-CaaVmFromGallery
 #region create App attach
 
 $msixPackagePath = $moveInfo.Path
-try {
-    $manifest = Read-CaaMsixManifest -Path $msixPackagePath -ErrorAction Stop
-}
-catch {
-    Write-Error "Manifest could not be read from $msixPackagePath, this may not be a complete Msix package."
-    Return
-}
 
-Convert-CaaMsixToDisk -Path $msixPackagePath -DestinationPath $env:Temp
 
-$familyName = New-CaaMsixName -PackageIdentifier $manifest.Identity.Name -CertHash (Get-CaaPublisherHash -publisherName $manifest.Identity.Publisher)
-$currentPackage = Get-AzWvdAppAttachPackage | Where-Object { $_.ImagePackageFamilyName -eq $familyName }
 
-Import-AzWvdAppAttachPackageInfo -ResourceGroupName $resourceGroupName -HostPoolName $HostPoolName -Path $msixPackagePath
-
-if (($currentPackage | Measure-Object).Count -eq 0 ) {
-    New-AzWvdAppAttachPackage -ResourceGroupName $resourceGroupName -HostPoolName $HostPoolName
-}
-else {
-    Update-AzWvdAppAttachPackage -Name $currentPackage.Name -ResourceGroupName $resourceGroupName
-}
 #endregion
 
 #cleanup

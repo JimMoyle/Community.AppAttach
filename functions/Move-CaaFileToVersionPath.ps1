@@ -9,10 +9,10 @@ function Move-CaaFileToVersionPath {
             Mandatory = $true
         )]
         [ValidateScript({
-            if (-Not ($_ | Test-Path) ) { throw "File does not exist" }
-            if (-Not ($_ | Test-Path -PathType Leaf) ) { throw "The Path argument must be a file. Folder paths are not allowed." }
-            return $true
-        })]
+                if (-Not ($_ | Test-Path) ) { throw "File does not exist" }
+                if (-Not ($_ | Test-Path -PathType Leaf) ) { throw "The Path argument must be a file. Folder paths are not allowed." }
+                return $true
+            })]
         [Alias('PSPath')]
         [System.String]$Path,
 
@@ -22,10 +22,10 @@ function Move-CaaFileToVersionPath {
             Mandatory = $true
         )]
         [ValidateScript({
-            if (-Not ($_ | Test-Path) ) { throw "Folder does not exist" }
-            if (-Not ($_ | Test-Path -PathType Container) ) { throw "The Path argument must be a folder. File paths are not allowed." }
-            return $true
-        })]
+                if (-Not ($_ | Test-Path) ) { throw "Folder does not exist" }
+                if (-Not ($_ | Test-Path -PathType Container) ) { throw "The Path argument must be a folder. File paths are not allowed." }
+                return $true
+            })]
         [String]$DestinationShare,
 
         [Parameter(
@@ -39,6 +39,11 @@ function Move-CaaFileToVersionPath {
         )]
         [Alias('Name', 'ID')]
         [String]$PackageIdentifier,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [Switch]$IncludeExtensionInTargetPath,
         
         [Parameter(
             ValuefromPipelineByPropertyName = $true
@@ -60,18 +65,28 @@ function Move-CaaFileToVersionPath {
             New-Item -ItemType Directory $destVer | Out-Null
         }
 
-        $destLoc = Join-Path $destVer $fileInfo.PSChildName
-
-        if (-not (Test-Path $destLoc)) {
-            Move-Item $Path $destLoc
+        if ($IncludeExtensionInTargetPath) {
+            $destFolder = Join-Path $destVer $fileInfo.Extension.TrimStart('.')
+        }
+        else {
+            $destFolder = $destVer
         }
 
-        If ($PassThru) {
+        if (-not (Test-Path $destFolder)) {
+            New-Item -ItemType Directory $destFolder | Out-Null
+        }
 
+        $destLoc = Join-Path $destFolder $fileInfo.PSChildName
+
+        if (-not (Test-Path $destLoc)) {
+            Get-ChildItem $fileInfo.Directory | Move-Item -Destination $destFolder
+        }
+
+        if ($PassThru) {
             $output = [PSCustomObject]@{
                 Name    = $PackageIdentifier
                 Version = $PackageVersion
-                Path = $destLoc
+                Path    = $destLoc
             }
             Write-Output $output
         }          

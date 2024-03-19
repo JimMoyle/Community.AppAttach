@@ -99,11 +99,12 @@ function Convert-CaaMsixToDisk {
                 }
                 continue
             }
-            if (-not(Test-Path $directoryPath)) {
-                New-Item -ItemType Directory $directoryPath | Out-Null
-            }    
-            
-            $exePath = (Join-Path $MsixMgrLocation 'msixmgr.exe').ToString()
+
+            Remove-Item $directoryPath -Recurse -ErrorAction SilentlyContinue
+
+            New-Item -ItemType Directory $directoryPath | Out-Null
+             
+            $exePath = (Join-Path $MsixMgrLocation 'x64\msixmgr.exe').ToString()
 
             $result = & $exePath -Unpack -packagePath $Path -destination $targetPath -applyacls -create -filetype $extension -rootDirectory apps
 
