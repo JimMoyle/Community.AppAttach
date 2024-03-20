@@ -78,8 +78,11 @@ function Move-CaaFileToVersionPath {
 
         $destLoc = Join-Path $destFolder $fileInfo.PSChildName
 
-        if (-not (Test-Path $destLoc)) {
-            Get-ChildItem $fileInfo.Directory | Move-Item -Destination $destFolder
+        if ($IncludeExtensionInTargetPath) {
+            Get-ChildItem $fileInfo.Directory | Move-Item -Destination $destFolder -Force
+        }
+        else{
+            Get-ChildItem $fileInfo.FullName | Move-Item -Destination $destFolder -Force
         }
 
         if ($PassThru) {
