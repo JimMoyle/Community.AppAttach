@@ -111,7 +111,7 @@ function New-CaaVmFromGallery {
             }
         }
         
-        $nic = New-AzNetworkInterface @newAzNetworkInterface
+        $nic = New-AzNetworkInterface @newAzNetworkInterface -Force
 
         # Create a virtual machine configuration using $imageDefinition.Id to use the latest image version.
         $vmConfig = New-AzVMConfig -VMName $Name -VMSize $VMSize -SecurityType TrustedLaunch | 

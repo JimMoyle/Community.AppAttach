@@ -12,8 +12,7 @@ function Get-CaaSilentInstall {
         [System.String]$InstallerType,
     
         [Parameter(
-            ValuefromPipeline = $true,
-            Mandatory = $true
+            ValuefromPipeline = $true
         )]
         [String]$InstallerSwitches
     )
