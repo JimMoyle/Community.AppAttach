@@ -17,18 +17,20 @@ Foreach ($import in $Functions) {
 $UseEverGreen = $false
 $UseWingetexe = $true
 
-$EverGreenPackageID = 'MicrosoftVisualStudioCode'
+$EverGreenPackageId = 'MicrosoftVisualStudioCode'
+$EverGreenPackageId = 'Get-EvergreenApp MicrosoftPowerShell'
 #$WpmPackageId = 'Microsoft.VisualStudioCode.Insiders'
 #$SearchTerm = '$_.Architecture -eq 'x64' -and $_.Scope -eq 'machine''
 #$WpmPackageId = 'Microsoft.WindowsTerminal.Preview'
-$WpmPackageId = 'Git.Git'
+#$WpmPackageId = 'Git.Git'
+$WpmPackageId = 'Microsoft.WindowsAppRuntime.1.4'
 
 
 $TemplateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
 $InstallerShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Installers\'
 $MsixShare = '\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\'
 $diskImageShare = '\\avdtoolsmsix.file.core.windows.net\appattach\AppAttachPackages'
-$CertPath = "\\avdtoolsmsix.file.core.windows.net\appattach\Templates\JimAdmin.pfx"
+$CertPath = "\\avdtoolsmsix.file.core.windows.net\appattach\Templates\JimMoyleCodeSigningCert.pfx"
 $TempPath = $env:TEMP
 $Location = 'uksouth'
 
@@ -39,7 +41,6 @@ $machinePass = Get-Content 'c:\JimM\machinePass.txt'
 
 $HostPoolName = 'MSIXPackage'
 
-$validExtensions = 'msix', 'msixbundle', 'appx', 'appxbundle'
 
 #endregion
 
@@ -58,7 +59,7 @@ $PublisherDisplayName = $publisherName.Split('=')[-1]
 #TODO loop till 1 left
 $appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object { $_.Architecture -eq 'x64' -and $_.Scope -eq 'Machine' }
 
-if ($appInfo.Count -ne 1) {
+if ($appInfo.Count -gt 1) {
     Write-Error "More than One Package found for $WpmPackageID please adjust your filter"
     return
 }
@@ -95,13 +96,17 @@ if ($UseWingetexe) {
             return
         }
 
-        if ([version]$wingetexeAppInfo.Version -gt [version]$appInfo.PackageVersion) {
-            $appInfo.PackageVersion = $wingetexeAppInfo.Version
-            $appInfo.InstallerUrl = $wingetexeAppInfo.'Installer Url'
-            $appInfo.InstallerSha256 = $wingetexeAppInfo.'Installer SHA256'
-            #$appInfo.Architecture = $wingetexeAppInfo.Architecture
+        if (($appInfo | Measure-Object).Count -eq 0) {
+            $appInfo = $wingetexeAppInfo | Select-Object -Property *, @{name = 'PackageVersion'; e = { $_.Version } }, @{name = 'InstallerUrl'; e = { $_.'Installer Url' } }, @{name = 'InstallerSha256'; e = { $_.'Installer SHA256' } }
         }
-
+        else {
+            if ([version]$wingetexeAppInfo.Version -gt [version]$appInfo.PackageVersion) {
+                $appInfo.PackageVersion = $wingetexeAppInfo.Version
+                $appInfo.InstallerUrl = $wingetexeAppInfo.'Installer Url'
+                $appInfo.InstallerSha256 = $wingetexeAppInfo.'Installer SHA256'
+                #$appInfo.Architecture = $wingetexeAppInfo.Architecture
+            }
+        }
     }
     catch {
         'TODO: search store for a likely candidate'
@@ -110,12 +115,10 @@ if ($UseWingetexe) {
 
 $installerFileName = $appInfo.InstallerUrl.Split('/')[-1]
 
-if ( $installerFileName.Split('.')[-1] -in $validExtensions ) {
-    $isMsix = $true
+if (Test-CaaIsMsix -Name $installerFileName) {
     $targetShare = $MsixShare
 }
 else {
-    $isMsix = $false
     $targetShare = $InstallerShare
 }
 
@@ -142,6 +145,25 @@ if ($downloadInstaller) {
     if (-not (Test-CaaSha256Hash -Path $outFile -Sha256Hash $appInfo.InstallerSha256)) {
         Write-Error "SHA256Hash incorrect for downloaded file $outFile, stopping processing"
         return
+    }
+    $initialMove = Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $targetShare -PackageIdentifier $appInfo.PackageIdentifier -PassThru
+}
+
+
+if ($AppUrl) {
+    $outFile = $AppUrl.Split('/')[-1]
+    Invoke-WebRequest -Uri $AppUrl -OutFile $outFile
+    if (Test-CaaIsMsix -Name $outFile) {
+        $targetShare = $MsixShare
+        $urlManifest = Read-CaaMsixManifest $outfile
+        $appInfo = [PSCustomObject]@{
+            PackageVersion = $urlManifest
+            PackageIdentifier = $urlManifest
+            InstallerSha256 = $urlManifest
+        }
+    }
+    else {
+        $targetShare = $InstallerShare
     }
     $initialMove = Move-CaaFileToVersionPath -Path $outFile -PackageVersion $appInfo.PackageVersion -DestinationShare $targetShare -PackageIdentifier $appInfo.PackageIdentifier -PassThru
 }
