@@ -14,16 +14,16 @@ Foreach ($import in $Functions) {
 
 #region Parameters
 
-$UseEverGreen = $false
-$UseWingetexe = $true
+$UseEverGreen = $true
+$UseWingetexe = $false
 
-$EverGreenPackageId = 'MicrosoftVisualStudioCode'
-$EverGreenPackageId = 'Get-EvergreenApp MicrosoftPowerShell'
+$EverGreenPackageId = 'MicrosoftTerminal'
+#$EverGreenPackageId = 'Get-EvergreenApp MicrosoftPowerShell'
 #$WpmPackageId = 'Microsoft.VisualStudioCode.Insiders'
 #$SearchTerm = '$_.Architecture -eq 'x64' -and $_.Scope -eq 'machine''
 #$WpmPackageId = 'Microsoft.WindowsTerminal.Preview'
 #$WpmPackageId = 'Git.Git'
-$WpmPackageId = 'Microsoft.WindowsAppRuntime.1.4'
+#$WpmPackageId = 'Microsoft.WindowsAppRuntime.1.4'
 
 
 $TemplateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
