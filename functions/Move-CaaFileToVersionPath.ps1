@@ -29,13 +29,15 @@ function Move-CaaFileToVersionPath {
         [String]$DestinationShare,
 
         [Parameter(
-            ValuefromPipelineByPropertyName = $true
+            ValuefromPipelineByPropertyName = $true,
+            Mandatory = $true
         )]
         [Alias('Version')]
         [version]$PackageVersion,
 
         [Parameter(
-            ValuefromPipelineByPropertyName = $true
+            ValuefromPipelineByPropertyName = $true,
+            Mandatory = $true
         )]
         [Alias('Name', 'ID')]
         [String]$PackageIdentifier,
