@@ -1,0 +1,9 @@
+{
+    "WingetId": "Git.Git",
+    "StoreId": "",
+    "EverGreen": {
+        "Id": "GitForWindows",
+        "Filter": "$_.InstallerType -eq 'Default' -and $_.Architecture -eq 'x64'"
+    },
+    "WPMId": ""
+}

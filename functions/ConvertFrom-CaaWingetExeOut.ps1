@@ -13,15 +13,16 @@ function ConvertFrom-CaaWingetExeOut {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [string]$InstallerType
+        #TODO add validate set
+        [string[]]$InstallerType = @('msix', 'appx')
 
     )
     begin {
         Set-StrictMode -Version Latest
     }
     process {
-
-        if ($InstallerType){
+        #TODO change this to switch
+        if ($InstallerType -contains 'msix' -or $InstallerType -contains 'appx') {
             $wingetOut = Winget show --Id $Id --Installer-Type $InstallerType
         }
         else{

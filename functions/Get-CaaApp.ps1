@@ -6,12 +6,17 @@ function Get-CaaApp {
             Position = 0,
             ValuefromPipelineByPropertyName = $true
         )]
-        [System.String]$WingetPackageId,
+        [System.String]$WingetId,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [System.String]$StoreId,
     
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [System.String]$EverGreenPackageId,
+        [System.String]$EverGreenId,
 
         [Parameter(
             ValuefromPipelineByPropertyName = $true

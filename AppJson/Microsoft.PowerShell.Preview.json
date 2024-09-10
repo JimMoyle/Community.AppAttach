@@ -1,0 +1,9 @@
+{
+    "WingetId": "Microsoft.PowerShell.Preview",
+    "StoreId": "9P95ZZKTNRN4",
+    "EverGreen": {
+        "Id": "MicrosoftPowerShell",
+        "Filter": "$_.Type -eq 'msixbundle' -and $_.Release -eq 'stable'"
+    },
+    "WPMId": ""
+}

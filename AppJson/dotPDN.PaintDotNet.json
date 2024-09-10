@@ -1,0 +1,9 @@
+{
+    "WingetId": "dotPDN.PaintDotNet",
+    "StoreId": "9nbhcs1lx4r0",
+    "EverGreen": {
+        "Id": "PaintDotNetOfflineInstaller",
+        "Filter": "$_.Architecture -eq 'x64' -and $_.URI.split('/')[-1].Split('.')[-3] -eq 'winmsi'"
+    },
+    "WPMId": ""
+}

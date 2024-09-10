@@ -1,0 +1,9 @@
+{
+    "WingetId": "Microsoft.VisualStudioCode.Insiders",
+    "StoreId": "",
+    "EverGreen": {
+        "Id": "MicrosoftVisualStudioCode",
+        "Filter": "$_.Channel -eq 'Insider' -and $_.Architecture -eq 'x64'"
+    },
+    "WPMId": ""
+}

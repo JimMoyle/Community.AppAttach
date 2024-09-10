@@ -14,10 +14,12 @@ Foreach ($import in $Functions) {
 
 #region Parameters
 
-$UseEverGreen = $true
-$UseWingetexe = $false
+$JsonPath = 'D:\GitHub\Community.AppAttach\AppJson\Microsoft.WindowsTerminal.Preview.json'
 
-$EverGreenPackageId = 'MicrosoftTerminal'
+#$UseEverGreen = $true
+#$UseWingetexe = $false
+
+#$EverGreenPackageId = 'MicrosoftTerminal'
 #$EverGreenPackageId = 'Get-EvergreenApp MicrosoftPowerShell'
 #$WpmPackageId = 'Microsoft.VisualStudioCode.Insiders'
 #$SearchTerm = '$_.Architecture -eq 'x64' -and $_.Scope -eq 'machine''
@@ -57,7 +59,18 @@ $PublisherDisplayName = $publisherName.Split('=')[-1]
 
 #region Find App
 #TODO loop till 1 left
-$appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object { $_.Architecture -eq 'x64' -and $_.Scope -eq 'Machine' }
+
+$appLocation = Get-Content $JsonPath | ConvertFrom-Json
+
+$appInfo = switch ($true) {
+    {$null -ne $appLocation.WingetId} { Get-CaaWingetExeApp -Id $appLocation.WingetId; break }
+    {$null -ne $appLocation.StoreId} { Get-CaaWingetExeApp -Id $appLocation.WingetId; break }
+    {$null -ne $appLocation.EvergreenId} { Get-EvergreenApp -Id $appLocation.EvergreenId }
+    Default {}
+}
+
+
+#$appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object { $_.Architecture -eq 'x64' -and $_.Scope -eq 'Machine' }
 
 if ($appInfo.Count -gt 1) {
     Write-Error "More than One Package found for $WpmPackageID please adjust your filter"
