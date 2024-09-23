@@ -51,4 +51,8 @@ function ConvertFrom-CaaWingetExeOut {
 
         Write-Output $output
     }
+    end{
+        Remove-Variable $output
+        #Remove-Variable $WingetLines
+    }
 }
