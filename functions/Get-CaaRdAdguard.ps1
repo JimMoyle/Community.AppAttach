@@ -40,8 +40,8 @@ function Get-CaaRdAdguard {
                 $output = [PSCustomObject]@{
                     AppName       = $appName
                     InstallerUrl  = $url
-                    Architecture  = $installer.Architecture
-                    InstallerType = $installer.InstallerType
+                    Architecture  = $appName.split('_')[2]
+                    InstallerType = $appName.split('.')[-1]
                 }
                 Write-Output $output
             }
