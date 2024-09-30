@@ -11,7 +11,12 @@ Foreach ($import in $Functions) {
     }
 }
 #endregion
-$msixPackagePath = "\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\Microsoft.VisualStudioCode.Insiders\1.88.0.0\Microsoft.VisualStudioCode.Insiders_1.88.0.0_x64__479h0rr4v8y2t.msix"
+
+$diskImageShare = "\\avdtoolsmsix.file.core.windows.net\appattach\AppAttachPackages"
+$msixPackagePath = "D:\MSIXPackages\MSTeams\24231.512.3106.6573\MSTeams-x64.msix"
+$resourceGroupName = 'DeleteMe'
+$HostPoolName = 'EditMsixPackage'
+
 try {
     $manifest = Read-CaaMsixManifest -Path $msixPackagePath -ErrorAction Stop
 }

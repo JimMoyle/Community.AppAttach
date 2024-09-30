@@ -14,5 +14,5 @@ Foreach ($import in $Functions) {
 Get-ChildItem -Path "$env:userprofile\Downloads\9*" | Get-ChildItem -File -Filter "*.???x*" -Recurse | Foreach-Object{
     $path = $_.FullName
     $manifest = Read-CaaMsixManifest $path 
-    $manifest.Identity | Move-CaaFileToVersionPath -DestinationShare D:\MSIXPackages -Path $path
+    $manifest.Identity | Move-CaaFileToVersionPath -DestinationShare D:\MSIXPackages -Path $path -PassThru
 }
