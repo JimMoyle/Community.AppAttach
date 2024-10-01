@@ -6,7 +6,6 @@ function Get-CaaRdAdguard {
     Param (
         [Parameter(
             Position = 0,
-            ParameterSetName = 'MyParameterSetName',
             ValuefromPipelineByPropertyName = $true,
             ValuefromPipeline = $true,
             Mandatory = $true

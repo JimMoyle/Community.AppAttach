@@ -46,6 +46,11 @@ function Move-CaaFileToVersionPath {
             ValuefromPipelineByPropertyName = $true
         )]
         [Switch]$IncludeExtensionInTargetPath,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [Switch]$Force,
         
         [Parameter(
             ValuefromPipelineByPropertyName = $true
@@ -74,6 +79,14 @@ function Move-CaaFileToVersionPath {
             $destFolder = $destVer
         }
 
+        if (-not ($Force) -and (Test-Path $destFolder)) {
+            Write-Error "The destination folder $destFolder already exists. Use -Force to overwrite."
+            return
+        }
+        else{
+            Remove-Item -Path $destFolder -Recurse -Force
+        }
+
         if (-not (Test-Path $destFolder)) {
             New-Item -ItemType Directory $destFolder | Out-Null
         }
@@ -83,7 +96,7 @@ function Move-CaaFileToVersionPath {
         if ($IncludeExtensionInTargetPath) {
             Get-ChildItem $fileInfo.Directory | Move-Item -Destination $destFolder -Force
         }
-        else{
+        else {
             Get-ChildItem $fileInfo.FullName | Move-Item -Destination $destFolder -Force
         }
 
