@@ -23,7 +23,7 @@ function Get-CaaApp {
 
     begin {
         Set-StrictMode -Version Latest
-        $Functions = @( Get-ChildItem -Path Functions\*.ps1 -ErrorAction SilentlyContinue )
+        $Functions = @( Get-ChildItem -Path Functions\Private\*.ps1 -ErrorAction SilentlyContinue )
 
         Foreach ($import in $Functions) {
             Try {
@@ -36,9 +36,9 @@ function Get-CaaApp {
         }
     } # begin
     process {
-        $appLocation = Get-Content $JsonPath | ConvertFrom-Json
+        $jsonInfo = Get-Content $JsonPath | ConvertFrom-Json
 
-        $appInfo = switch ($appLocation) {
+        $appInfo = switch ($jsonInfo) {
             { $null -ne $_.WingetId } { $appInfo = Get-CaaWingetExeApp -Id $_.WingetId; break }
             { $null -ne $_.StoreId } { $appInfo = Get-CaaStoreApp -Id $_.WingetId; break }
             { $null -ne $_.EvergreenId } { $appInfo = Get-EvergreenApp -Id $_.EvergreenId }
@@ -55,4 +55,4 @@ function Get-CaaApp {
     end {} # end
 }  #function
 
-'AppJson\BlenderFoundation.Blender.json' | Get-CaaApp
+Get-CaaApp -JsonPath 'AppJson\BlenderFoundation.Blender.json'
