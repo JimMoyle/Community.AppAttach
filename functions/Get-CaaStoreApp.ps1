@@ -23,7 +23,11 @@ function Get-CaaStoreApp {
         Set-StrictMode -Version Latest
     } # begin
     process {
-        
+
+        $wingetDownloadOut = & WinGet Download --id $StoreId --download-directory $env:TEMP --skip-microsoft-store-package-license --skip-dependencies --accept-source-agreements --accept-package-agreements --ignore-warnings
+        if ($wingetDownloadOut -notmatch 'Successfully verified Microsoft Store package hash') {
+            $output = Get-CaaRdAdguard -StoreId $StoreId
+        }
     } # process
     end {} # end
 }  #function

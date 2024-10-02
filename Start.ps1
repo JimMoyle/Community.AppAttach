@@ -16,16 +16,6 @@ Foreach ($import in $Functions) {
 
 $JsonPath = 'D:\GitHub\Community.AppAttach\AppJson\Microsoft.WindowsTerminal.Preview.json'
 
-#$UseEverGreen = $true
-#$UseWingetexe = $false
-
-#$EverGreenPackageId = 'MicrosoftTerminal'
-#$EverGreenPackageId = 'Get-EvergreenApp MicrosoftPowerShell'
-#$WpmPackageId = 'Microsoft.VisualStudioCode.Insiders'
-#$SearchTerm = '$_.Architecture -eq 'x64' -and $_.Scope -eq 'machine''
-#$WpmPackageId = 'Microsoft.WindowsTerminal.Preview'
-#$WpmPackageId = 'Git.Git'
-#$WpmPackageId = 'Microsoft.WindowsAppRuntime.1.4'
 
 
 $TemplateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
@@ -62,10 +52,10 @@ $PublisherDisplayName = $publisherName.Split('=')[-1]
 
 $appLocation = Get-Content $JsonPath | ConvertFrom-Json
 
-$appInfo = switch ($true) {
-    {$null -ne $appLocation.WingetId} { Get-CaaWingetExeApp -Id $appLocation.WingetId; break }
-    {$null -ne $appLocation.StoreId} { Get-CaaWingetExeApp -Id $appLocation.WingetId; break }
-    {$null -ne $appLocation.EvergreenId} { Get-EvergreenApp -Id $appLocation.EvergreenId }
+$appInfo = switch ($appLocation) {
+    {$null -ne $_.WingetId} { $appInfo = Get-CaaWingetExeApp -Id $_.WingetId; break }
+    {$null -ne $_.StoreId} { $appInfo = Get-CaaStoreApp -Id $_.WingetId; break }
+    {$null -ne $_.EvergreenId} { $appInfo = Get-EvergreenApp -Id $_.EvergreenId }
     Default {}
 }
 
