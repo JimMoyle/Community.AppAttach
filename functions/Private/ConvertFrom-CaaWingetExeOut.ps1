@@ -14,7 +14,7 @@ function ConvertFrom-CaaWingetExeOut {
             ValuefromPipelineByPropertyName = $true
         )]
         #TODO add validate set
-        [string[]]$InstallerType = @('msix', 'appx')
+        [string[]]$InstallerType
 
     )
     begin {
@@ -31,9 +31,20 @@ function ConvertFrom-CaaWingetExeOut {
 
         $wingetLines = $wingetOut -Split '\r?\n'
 
+        $joined = $wingetOut -join ''
+
+        if ($joined -match 'Description:(?:\s*)(.*)Homepage:\s') {
+            $description = $matches[1]
+        }
+        else {
+            $description = ''
+        }
+
         $output = [PSCustomObject]@{
             PackageIdentifier = $Id
+            Description = $description
         }
+
 
         foreach ($line in $WingetLines) {
             if ($line -notlike '*:*') {
@@ -52,7 +63,7 @@ function ConvertFrom-CaaWingetExeOut {
         Write-Output $output
     }
     end{
-        Remove-Variable $output
+        #Remove-Variable $output
         #Remove-Variable $WingetLines
     }
 }

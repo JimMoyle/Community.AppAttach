@@ -39,10 +39,16 @@ function Get-CaaApp {
         $jsonInfo = Get-Content $JsonPath | ConvertFrom-Json
 
         $appInfo = switch ($jsonInfo) {
-            { $null -ne $_.WingetId } { $appInfo = Get-CaaWingetExeApp -Id $_.WingetId; break }
+            { $null -ne $_.WingetId } { $appInfo = Get-CaaWingetApp -Id $_.WingetId; break }
             { $null -ne $_.StoreId } { $appInfo = Get-CaaStoreApp -Id $_.WingetId; break }
             { $null -ne $_.EvergreenId } { $appInfo = Get-EvergreenApp -Id $_.EvergreenId }
             Default {}
+        }
+
+        switch (($appInfo | Measure-Object).Count) {
+            1 { break }
+            0 { Write-Error "No Package found"; return }
+            Default { Write-Error "More than One Package found"; return }
         }
 
         if ($appInfo.Count -gt 1) {
