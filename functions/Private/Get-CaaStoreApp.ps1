@@ -4,28 +4,20 @@ function Get-CaaStoreApp {
     Param (
         [Parameter(
             Position = 0,
-            ParameterSetName = 'ById',
             ValuefromPipelineByPropertyName = $true,
             ValuefromPipeline = $true,
             Mandatory = $true
         )]
-        [System.String]$StoreId,
+        [Alias('StoreId')]
+        [System.String]$Id,
 
         [Parameter(
             Position = 1,
-            ParameterSetName = 'ById',
             ValuefromPipelineByPropertyName = $true,
             ValuefromPipeline = $true,
             Mandatory = $true
         )]
-        [System.String]$DownloadPath,
-    
-        [Parameter(
-            ParameterSetName = 'InputObject',
-            ValuefromPipeline = $true,
-            Mandatory = $true
-        )]
-        [My.Type]$InputObject
+        [System.String]$DownloadPath
     )
 
     begin {
@@ -33,7 +25,7 @@ function Get-CaaStoreApp {
     } # begin
     process {
 
-        $wingetDownloadOut = & WinGet Download --id $StoreId --download-directory $env:TEMP --skip-microsoft-store-package-license --skip-dependencies --accept-source-agreements --accept-package-agreements --ignore-warnings
+        $wingetDownloadOut = & WinGet Download --id $Id --download-directory $env:TEMP --skip-microsoft-store-package-license --skip-dependencies --accept-source-agreements #--accept-package-agreements #--ignore-warnings
         if ($wingetDownloadOut -notmatch 'Successfully verified Microsoft Store package hash') {
             $output = Get-CaaRdAdguard -StoreId $StoreId
         }

@@ -38,10 +38,29 @@ function Get-CaaApp {
     process {
         $jsonInfo = Get-Content $JsonPath | ConvertFrom-Json
 
-        $appInfo = switch ($jsonInfo) {
-            { $null -ne $_.WingetId } { $appInfo = Get-CaaWingetApp -Id $_.WingetId; break }
-            { $null -ne $_.StoreId } { $appInfo = Get-CaaStoreApp -Id $_.WingetId; break }
-            { $null -ne $_.EvergreenId } { $appInfo = Get-EvergreenApp -Id $_.EvergreenId }
+        switch ($jsonInfo) {
+            { '' -ne $_.Evergreen.Id } {
+                $everGreenAppInfo = Get-EvergreenApp -Id $_.Evergreen.Id
+                $appInfo = $everGreenAppInfo 
+            }
+            { '' -ne $_.StoreId } {
+                $storeAppInfo = Get-CaaStoreApp -Id $_.StoreId -DownloadPath $DownloadFolder
+                if ($null -ne $_.EvergreenId) {
+                    $storeAppInfo | Add-Member -MemberType NoteProperty -Name Version -Value $everGreenAppInfo.Version
+                    $storeAppInfo | Add-Member -MemberType NoteProperty -Name InstallerUrl -Value $everGreenAppInfo.InstallerUrl
+                }
+                $appInfo = $storeAppInfo
+            }
+            { '' -ne $_.WingetId } {
+                $wingetAppInfo = Get-CaaWingetApp -Id $_.WingetId
+                if ($null -eq $appInfo.InstallerUrl) {
+                    $appInfo = $wingetAppInfo
+                }
+                else{
+                    $wingetAppInfo | Add-Member -MemberType NoteProperty -Name InstallerUrl -Value $appInfo.InstallerUrl
+                    $appInfo = $wingetAppInfo
+                }
+            }
             Default {}
         }
 
