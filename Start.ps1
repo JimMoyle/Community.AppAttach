@@ -1,4 +1,7 @@
-#region Dot source the files
+
+
+
+
 $Functions = @( Get-ChildItem -Path Functions\*.ps1 -ErrorAction SilentlyContinue )
 
 Foreach ($import in $Functions) {
@@ -15,7 +18,6 @@ Foreach ($import in $Functions) {
 #region Parameters
 
 $JsonPath = 'D:\GitHub\Community.AppAttach\AppJson\Microsoft.WindowsTerminal.Preview.json'
-
 
 
 $TemplateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
