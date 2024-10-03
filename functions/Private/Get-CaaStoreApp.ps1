@@ -25,9 +25,10 @@ function Get-CaaStoreApp {
     } # begin
     process {
 
-        $wingetDownloadOut = & WinGet Download --id $Id --download-directory $env:TEMP --skip-microsoft-store-package-license --skip-dependencies --accept-source-agreements #--accept-package-agreements #--ignore-warnings
+        $wingetDownloadOut = & WinGet Download --id $Id --download-directory $env:TEMP --skip-microsoft-store-package-license --skip-dependencies --accept-source-agreements --accept-package-agreements #--ignore-warnings
         if ($wingetDownloadOut -notmatch 'Successfully verified Microsoft Store package hash') {
-            $output = Get-CaaRdAdguard -StoreId $StoreId
+            Write-Error -Message "Failed to download $Id"
+            return
         }
         Write-Output $output
     } # process

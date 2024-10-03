@@ -40,12 +40,14 @@ function Get-CaaApp {
 
         switch ($jsonInfo) {
             { '' -ne $_.Evergreen.Id } {
-                $everGreenAppInfo = Get-EvergreenApp -Id $_.Evergreen.Id
-                $appInfo = $everGreenAppInfo 
+                $filter = [ScriptBlock]::Create($_.EverGreen.Filter)
+                $everGreenAppInfo = Get-EvergreenApp -Name $_.Evergreen.Id | Where-Object $filter
+                $appInfo = $everGreenAppInfo | Select-Object -Property Version, @{Name = 'InstallerUrl';Expression = {$_.URI}}
+                $appInfo | Add-Member -MemberType NoteProperty -Name Downloaded -Value $false
             }
             { '' -ne $_.StoreId } {
                 $storeAppInfo = Get-CaaStoreApp -Id $_.StoreId -DownloadPath $DownloadFolder
-                if ($null -ne $_.EvergreenId) {
+                if ('' -ne $_.Evergreen.Id) {
                     $storeAppInfo | Add-Member -MemberType NoteProperty -Name Version -Value $everGreenAppInfo.Version
                     $storeAppInfo | Add-Member -MemberType NoteProperty -Name InstallerUrl -Value $everGreenAppInfo.InstallerUrl
                 }
@@ -53,13 +55,24 @@ function Get-CaaApp {
             }
             { '' -ne $_.WingetId } {
                 $wingetAppInfo = Get-CaaWingetApp -Id $_.WingetId
-                if ($null -eq $appInfo.InstallerUrl) {
+                if (-not ($appInfo.InstallerUrl)) {
                     $appInfo = $wingetAppInfo
                 }
                 else{
                     $wingetAppInfo | Add-Member -MemberType NoteProperty -Name InstallerUrl -Value $appInfo.InstallerUrl
                     $appInfo = $wingetAppInfo
                 }
+                if ([System.Uri]$appInfo.InstallerUrl -or $appInfo.Downloaded -eq $true) {
+                    break
+                }
+            }
+            { '' -ne $_.StoreId } {
+                $rdadguardAppInfo = Get-RdAdguard -Id $_.StoreId
+                if ('' -ne $_.WingetId) {
+                    $storeAppInfo | Add-Member -MemberType NoteProperty -Name Version -Value $everGreenAppInfo.Version
+                    $storeAppInfo | Add-Member -MemberType NoteProperty -Name InstallerUrl -Value $everGreenAppInfo.InstallerUrl
+                }
+                $appInfo = $rdadguardAppInfo
             }
             Default {}
         }
@@ -80,4 +93,4 @@ function Get-CaaApp {
     end {} # end
 }  #function
 
-Get-CaaApp -JsonPath 'AppJson\BlenderFoundation.Blender.json'
+Get-CaaApp -JsonPath 'AppJson\Microsoft.PowerShell.Preview.json'
