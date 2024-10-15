@@ -65,7 +65,7 @@ if ($appInfo.Count -gt 1) {
 }
 
 if ($UseEverGreen) {
-    $evergreenAppInfo = Get-evergreenapp $EverGreenPackageID | Where-Object { $_.channel -eq 'Insider' -and $_.Architecture -eq 'x64' -and $_.Platform -eq 'win32-x64' }
+    $evergreenAppInfo = Get-evergreenapp $EverGreenPackageID #| Where-Object { $_.channel -eq 'Insider' -and $_.Architecture -eq 'x64' -and $_.Platform -eq 'win32-x64' }
     if (($evergreenAppInfo | Measure-Object).Count -gt 1) {
         Write-Error "More than One Package found for $evergreenAppInfo please adjust your filter"
         return
