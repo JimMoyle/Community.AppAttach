@@ -13,15 +13,16 @@ function ConvertFrom-CaaWingetExeOut {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [string]$InstallerType
+        #TODO add validate set
+        [string[]]$InstallerType
 
     )
     begin {
         Set-StrictMode -Version Latest
     }
     process {
-
-        if ($InstallerType){
+        #TODO change this to switch
+        if ($InstallerType -contains 'msix' -or $InstallerType -contains 'appx') {
             $wingetOut = Winget show --Id $Id --Installer-Type $InstallerType
         }
         else{
@@ -30,9 +31,20 @@ function ConvertFrom-CaaWingetExeOut {
 
         $wingetLines = $wingetOut -Split '\r?\n'
 
+        $joined = $wingetOut -join ''
+
+        if ($joined -match 'Description:(?:\s*)(.*)Homepage:\s') {
+            $description = $matches[1]
+        }
+        else {
+            $description = ''
+        }
+
         $output = [PSCustomObject]@{
             PackageIdentifier = $Id
+            Description = $description
         }
+
 
         foreach ($line in $WingetLines) {
             if ($line -notlike '*:*') {
@@ -49,5 +61,9 @@ function ConvertFrom-CaaWingetExeOut {
         }
 
         Write-Output $output
+    }
+    end{
+        #Remove-Variable $output
+        #Remove-Variable $WingetLines
     }
 }

@@ -1,4 +1,4 @@
-function Get-CaaWingetExeApp {
+function Get-CaaWingetApp {
     [CmdletBinding()]
 
     Param (
@@ -16,19 +16,6 @@ function Get-CaaWingetExeApp {
 
     begin {
         Set-StrictMode -Version Latest
-
-        $sources = foreach ($line in (& Winget source list | Select-Object -Skip 2)) {
-
-            $sourceName, $sourceUrl = $line -Split '\s+', 2
-            $source = [PSCustomObject]@{
-                Source = $sourceName
-                Url    = $sourceUrl
-            }
-            Write-Output $source
-        }
-        if ($sources.Source -notcontains 'msstore') {
-            Write-Warning 'Store apps cannot be checked'
-        }
 
     } # begin
     process {

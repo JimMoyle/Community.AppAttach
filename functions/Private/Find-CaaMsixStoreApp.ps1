@@ -42,8 +42,8 @@ function Find-CaaMsixStoreApp {
 
         $searchStore = Winget search $appName --source msstore
 
-        $removeHeaders = $searchStore | Where-Object { $_ -like "*unknown*" }
-        $searchObj = foreach ($storeApp in $removeHeaders) {
+        $headerRemoved = $searchStore | Where-Object { $_ -like "*unknown*" }
+        $searchObj = foreach ($storeApp in $headerRemoved) {
             $storeApp -Match "^(.*)\s(\w+)\s+Unknown$" | Out-Null
             $appObj = [PSCustomObject]@{
                 AppName           = $matches[1].Trim()

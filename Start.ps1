@@ -1,4 +1,7 @@
-#region Dot source the files
+
+
+
+
 $Functions = @( Get-ChildItem -Path Functions\*.ps1 -ErrorAction SilentlyContinue )
 
 Foreach ($import in $Functions) {
@@ -14,16 +17,7 @@ Foreach ($import in $Functions) {
 
 #region Parameters
 
-$UseEverGreen = $true
-$UseWingetexe = $false
-
-$EverGreenPackageId = 'MicrosoftTerminal'
-#$EverGreenPackageId = 'Get-EvergreenApp MicrosoftPowerShell'
-#$WpmPackageId = 'Microsoft.VisualStudioCode.Insiders'
-#$SearchTerm = '$_.Architecture -eq 'x64' -and $_.Scope -eq 'machine''
-#$WpmPackageId = 'Microsoft.WindowsTerminal.Preview'
-#$WpmPackageId = 'Git.Git'
-#$WpmPackageId = 'Microsoft.WindowsAppRuntime.1.4'
+$JsonPath = 'D:\GitHub\Community.AppAttach\AppJson\Microsoft.WindowsTerminal.Preview.json'
 
 
 $TemplateShare = '\\avdtoolsmsix.file.core.windows.net\appattach\Templates\'
@@ -57,7 +51,18 @@ $PublisherDisplayName = $publisherName.Split('=')[-1]
 
 #region Find App
 #TODO loop till 1 left
-$appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object { $_.Architecture -eq 'x64' -and $_.Scope -eq 'Machine' }
+
+$appLocation = Get-Content $JsonPath | ConvertFrom-Json
+
+$appInfo = switch ($appLocation) {
+    {$null -ne $_.WingetId} { $appInfo = Get-CaaWingetExeApp -Id $_.WingetId; break }
+    {$null -ne $_.StoreId} { $appInfo = Get-CaaStoreApp -Id $_.WingetId; break }
+    {$null -ne $_.EvergreenId} { $appInfo = Get-EvergreenApp -Id $_.EvergreenId }
+    Default {}
+}
+
+
+#$appInfo = Get-CaaWpmRestApp -Id $WpmPackageID | Where-Object { $_.Architecture -eq 'x64' -and $_.Scope -eq 'Machine' }
 
 if ($appInfo.Count -gt 1) {
     Write-Error "More than One Package found for $WpmPackageID please adjust your filter"

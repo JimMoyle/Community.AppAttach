@@ -106,6 +106,11 @@ function Convert-CaaMsixToDisk {
              
             $exePath = (Join-Path $MsixMgrLocation 'x64\msixmgr.exe').ToString()
 
+            if (-not(Test-Path $exePath)) {
+                Write-Error "msixmgr.exe not found at $exePath"
+                return
+            }
+
             $result = & $exePath -Unpack -packagePath $Path -destination $targetPath -applyacls -create -filetype $extension -rootDirectory apps
 
             switch ($true) {
