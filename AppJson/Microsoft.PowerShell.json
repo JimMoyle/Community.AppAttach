@@ -1,9 +1,7 @@
 {
     "WingetId": "Microsoft.PowerShell",
     "StoreId": "9MZ1SNWT0N5D",
-    "EverGreen": {
-        "Id": "MicrosoftPowerShell",
-        "Filter": "$_.Release -eq 'Stable' -and $_.Architecture -eq 'x64'"
-    },
+    "EverGreenId": "MicrosoftPowerShell",
+    "EverGreenFilter": "$_.Release -eq 'Stable' -and $_.Architecture -eq 'x64'",
     "WPMId": ""
 }

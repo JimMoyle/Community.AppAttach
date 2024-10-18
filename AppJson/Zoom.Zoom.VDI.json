@@ -1,9 +1,7 @@
 {
     "WingetId": "Zoom.Zoom.VDI",
     "StoreId": "",
-    "EverGreen": {
-        "Id": "",
-        "Filter": ""
-    },
+    "EverGreenId": "",
+    "EverGreenFilter": "",
     "WPMId": ""
 }

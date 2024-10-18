@@ -1,9 +1,7 @@
 {
     "WingetId": "BlenderFoundation.Blender",
     "StoreId": "9PP3C07GTVRH",
-    "EverGreen": {
-        "Id": "",
-        "Filter": ""
-    },
+    "EverGreenId": "",
+    "EverGreenFilter": "",
     "WPMId": ""
 }

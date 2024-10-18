@@ -1,9 +1,7 @@
 {
     "WingetId": "Microsoft.SysinternalsSuite",
     "StoreId": "9P7KNL5RWT25",
-    "EverGreen": {
-        "Id": "",
-        "Filter": ""
-    },
+    "EverGreenId": "",
+    "EverGreenFilter": "",
     "WPMId": ""
 }

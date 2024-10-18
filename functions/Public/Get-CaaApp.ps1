@@ -3,12 +3,26 @@ function Get-CaaApp {
 
     Param (
         [Parameter(
-            Position = 0,
-            ValuefromPipelineByPropertyName = $true,
-            ValueFromPipeline = $true,
-            Mandatory = $true
+            ValuefromPipelineByPropertyName = $true
         )]
-        [System.String]$JsonPath,
+        [System.String]$StoreId,
+
+        [Parameter(
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [System.String]$WingetId,
+
+        [Parameter(
+            ParameterSetName = 'EverGreen',
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [System.String]$EverGreenId,
+
+        [Parameter(
+            ParameterSetName = 'EverGreen',
+            ValuefromPipelineByPropertyName = $true
+        )]
+        [System.String]$EverGreenFilter,
 
         [Parameter(
             ValuefromPipelineByPropertyName = $true
@@ -18,7 +32,16 @@ function Get-CaaApp {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [System.String]$DownloadFolder = $env:TEMP
+        [System.String]$DownloadFolder = $env:TEMP,
+
+        [Parameter(
+            ParameterSetName = 'InputObject',
+            ValuefromPipelineByPropertyName = $true,
+            ValueFromPipeline = $true,
+            Mandatory = $true
+        )]
+        [System.String]$InputObject
+
     )
 
     begin {
@@ -36,12 +59,17 @@ function Get-CaaApp {
         }
     } # begin
     process {
-        $jsonInfo = Get-Content $JsonPath | ConvertFrom-Json
 
-        switch ($jsonInfo) {
-            { '' -ne $_.Evergreen.Id } {
-                $filter = [ScriptBlock]::Create($_.EverGreen.Filter)
+        if ($InputObject) {
+            $InputObject = $InputObject | Get-CaaApp
+            return
+        }
+
+        switch ($true) {
+            { $EverGreenId } {
+                $filter = [ScriptBlock]::Create($EverGreenFilter)
                 $everGreenAppInfo = Get-EvergreenApp -Name $_.Evergreen.Id | Where-Object $filter
+                Invole-WebRequest -Uri $everGreenAppInfo.URI -OutFile "$DownloadFolder\$($everGreenAppInfo.Name).exe"
                 $appInfo = $everGreenAppInfo | Select-Object -Property Version, @{Name = 'InstallerUrl';Expression = {$_.URI}}
                 $appInfo | Add-Member -MemberType NoteProperty -Name Downloaded -Value $false
             }
@@ -67,7 +95,7 @@ function Get-CaaApp {
                 }
             }
             { '' -ne $_.StoreId } {
-                $rdadguardAppInfo = Get-RdAdguard -Id $_.StoreId
+                $rdadguardAppInfo = Get-CaaRdAdguard -Id $_.StoreId
                 if ('' -ne $_.WingetId) {
                     $storeAppInfo | Add-Member -MemberType NoteProperty -Name Version -Value $everGreenAppInfo.Version
                     $storeAppInfo | Add-Member -MemberType NoteProperty -Name InstallerUrl -Value $everGreenAppInfo.InstallerUrl
@@ -93,4 +121,5 @@ function Get-CaaApp {
     end {} # end
 }  #function
 
-Get-CaaApp -JsonPath 'AppJson\Microsoft.PowerShell.Preview.json'
+$Path = 'AppJson\Microsoft.PowerShell.Preview.json'
+Get-CaaApp -InputObject (Get-Content -Path $Path | ConvertFrom-Json)

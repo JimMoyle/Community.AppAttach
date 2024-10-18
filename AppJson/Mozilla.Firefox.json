@@ -1,9 +1,7 @@
 {
     "WingetId": "Mozilla.Firefox",
     "StoreId": "9NZVDKPMR9RD",
-    "EverGreen": {
-        "Id": "mozillafirefox",
-        "Filter": "$_.type -eq 'msix' -and $_.Architecture -eq 'x64' -and $_.Channel -eq 'Current'}"
-    },
+    "EverGreenId": "mozillafirefox",
+    "EverGreenFilter": "$_.type -eq 'msix' -and $_.Architecture -eq 'x64' -and $_.Channel -eq 'Current'",
     "WPMId": ""
 }

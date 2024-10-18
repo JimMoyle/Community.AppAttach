@@ -1,9 +1,7 @@
 {
     "WingetId": "VideoLAN.VLC",
     "StoreId": "9NBLGGH4VVNH",
-    "EverGreen": {
-        "Id": "",
-        "Filter": ""
-    },
+    "EverGreenId": "",
+    "EverGreenFilter": "",
     "WPMId": ""
 }

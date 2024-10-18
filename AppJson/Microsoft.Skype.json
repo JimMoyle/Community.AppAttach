@@ -1,9 +1,7 @@
 {
     "WingetId": "Microsoft.Skype",
     "StoreId": "9WZDNCRFJ364",
-    "EverGreen": {
-        "Id": "",
-        "Filter": ""
-    },
+    "EverGreenId": "",
+    "EverGreenFilter": "",
     "WPMId": ""
 }

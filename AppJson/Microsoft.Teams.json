@@ -1,9 +1,7 @@
 {
     "WingetId": "Microsoft.Teams",
     "StoreId": "",
-    "EverGreen": {
-        "Id": "MicrosoftTeams",
-        "Filter": "$_.Release -eq 'EnterPrise' -and $_.Architecture -eq 'x64'"
-    },
+    "EverGreenId": "",
+    "EverGreenFilter": "",
     "WPMId": ""
 }

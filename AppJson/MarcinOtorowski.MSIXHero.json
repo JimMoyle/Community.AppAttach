@@ -1,9 +1,7 @@
 {
     "WingetId": "MarcinOtorowski.MSIXHero",
     "StoreId": "9N3LL1W6QCNT",
-    "EverGreen": {
-        "Id": "",
-        "Filter": ""
-    },
+    "EverGreenId": "",
+    "EverGreenFilter": "",
     "WPMId": ""
 }
