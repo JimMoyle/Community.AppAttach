@@ -62,64 +62,86 @@ function Get-CaaApp {
 
         if ($InputObject) {
             $InputObject = $InputObject | Get-CaaApp
+            break
+        }
+
+        if ($WingetId) {
+            $wingetDownloadOut = & WinGet Download --id $WingetId --download-directory $DownloadFolder --installer-Type msix --skip-dependencies --accept-source-agreements --accept-package-agreements
+            if ($wingetDownloadOut -notcontains "Successfully verified installer hash") {
+                Write-Error -Message "Failed to download $WingetId via Winget"
+                return
+            }
+            $output = [pscustomobject]@{
+                Path = (($wingetDownloadOut | Select-Object -Last 1) -Split ':', 2)[1].Trim()
+            }
+            Write-Output $output
             return
         }
 
-        switch ($true) {
-            { $EverGreenId } {
-                $filter = [ScriptBlock]::Create($EverGreenFilter)
-                $everGreenAppInfo = Get-EvergreenApp -Name $_.Evergreen.Id | Where-Object $filter
-                Invole-WebRequest -Uri $everGreenAppInfo.URI -OutFile "$DownloadFolder\$($everGreenAppInfo.Name).exe"
-                $appInfo = $everGreenAppInfo | Select-Object -Property Version, @{Name = 'InstallerUrl';Expression = {$_.URI}}
-                $appInfo | Add-Member -MemberType NoteProperty -Name Downloaded -Value $false
+        if ($EverGreenId) {
+            $filter = [ScriptBlock]::Create($EverGreenFilter)
+            try {
+                $everGreenAppInfo = Get-EvergreenApp -Name $EvergreenId -ErrorAction Stop | Where-Object $filter
             }
-            { '' -ne $_.StoreId } {
-                $storeAppInfo = Get-CaaStoreApp -Id $_.StoreId -DownloadPath $DownloadFolder
-                if ('' -ne $_.Evergreen.Id) {
-                    $storeAppInfo | Add-Member -MemberType NoteProperty -Name Version -Value $everGreenAppInfo.Version
-                    $storeAppInfo | Add-Member -MemberType NoteProperty -Name InstallerUrl -Value $everGreenAppInfo.InstallerUrl
-                }
-                $appInfo = $storeAppInfo
+            catch {
+                Write-Error "Failed to run `'Get-EvergreenApp -Name $EvergreenId`'"
+                break
             }
-            { '' -ne $_.WingetId } {
-                $wingetAppInfo = Get-CaaWingetApp -Id $_.WingetId
-                if (-not ($appInfo.InstallerUrl)) {
-                    $appInfo = $wingetAppInfo
-                }
-                else{
-                    $wingetAppInfo | Add-Member -MemberType NoteProperty -Name InstallerUrl -Value $appInfo.InstallerUrl
-                    $appInfo = $wingetAppInfo
-                }
-                if ([System.Uri]$appInfo.InstallerUrl -or $appInfo.Downloaded -eq $true) {
-                    break
-                }
+            
+            if ((($everGreenAppInfo | Measure-Object).Count) -ne 1) {
+                Write-Error "Filter did not result in a unique package, please refine the filter"
+                return
             }
-            { '' -ne $_.StoreId } {
-                $rdadguardAppInfo = Get-CaaRdAdguard -Id $_.StoreId
-                if ('' -ne $_.WingetId) {
-                    $storeAppInfo | Add-Member -MemberType NoteProperty -Name Version -Value $everGreenAppInfo.Version
-                    $storeAppInfo | Add-Member -MemberType NoteProperty -Name InstallerUrl -Value $everGreenAppInfo.InstallerUrl
+            $fileName = $everGreenAppInfo.URI.Split('/')[-1]
+            $outFile = Join-Path $DownloadFolder $fileName
+            $iwrPassThru = Invoke-WebRequest -Uri $everGreenAppInfo.URI -OutFile $outFile -PassThru
+            if ($iwrPassThru.StatusCode -eq 200) {
+                $output = [pscustomobject]@{
+                    Path = $outFile
                 }
-                $appInfo = $rdadguardAppInfo
+                Write-Output $output
+                return
             }
-            Default {}
+            else {
+                Write-Error "Failed to download $EvergreenId via EverGreen"
+            }
         }
 
-        switch (($appInfo | Measure-Object).Count) {
-            1 { break }
-            0 { Write-Error "No Package found"; return }
-            Default { Write-Error "More than One Package found"; return }
-        }
+        if ($StoreId) {
+            try {
+                $storeAppInfo = Get-CaaStoreApp -Id $StoreId -DownloadPath $DownloadFolder -ErrorAction stop
+                $output = [pscustomobject]@{
+                    Path = $storeAppInfo.Path
+                }
+                Write-Output $output
+                return 
+            }
+            catch {
+                Write-Information "failed to get Store App $StoreId via Winget"
+            }
 
-        if ($appInfo.Count -gt 1) {
-            Write-Error "More than One Package found"
-            return
+            try {
+                $rdadguardAppInfo = Get-CaaRdAdguard -StoreId $StoreId -ErrorAction Stop
+                $downloadPath = Join-Path $DownloadFolder $rdadguardAppInfo.AppName
+                Invoke-WebRequest -Uri $rdadguardAppInfo.InstallerUrl -OutFile $downloadPath
+                $output = [pscustomobject]@{
+                    Path = $downloadPath
+                }
+                Write-Output $output
+                return 
+            }
+            catch {
+                Write-Error "Failed to get Store App $StoreId via RdAdguard"
+            }
+            
         }
-
 
     } # process
     end {} # end
 }  #function
 
 $Path = 'AppJson\Microsoft.PowerShell.Preview.json'
-Get-CaaApp -InputObject (Get-Content -Path $Path | ConvertFrom-Json)
+$Path = 'D:\GitHub\Community.AppAttach\AppJson\Microsoft.WindowsTerminal.Preview.json'
+$info = Get-Content -Path $Path | ConvertFrom-Json
+#Get-CaaApp -EverGreenId $info.EvergreenId -EverGreenFilter $info.EvergreenFilter
+Get-CaaApp -StoreId $info.StoreId
