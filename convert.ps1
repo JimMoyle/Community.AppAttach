@@ -14,8 +14,8 @@ Foreach ($import in $Functions) {
 
 $diskImageShare = "\\avdtoolsmsix.file.core.windows.net\appattach\AppAttachPackages"
 $msixPackagePath = "D:\MSIXPackages\MSTeams\24231.512.3106.6573\MSTeams-x64.msix"
-$resourceGroupName = 'DeleteMe'
-$HostPoolName = 'EditMsixPackage'
+#$resourceGroupName = 'DeleteMe'
+#$HostPoolName = 'EditMsixPackage'
 
 try {
     $manifest = Read-CaaMsixManifest -Path $msixPackagePath -ErrorAction Stop
@@ -29,6 +29,9 @@ $target = Convert-CaaMsixToDisk -Path $msixPackagePath -DestinationPath $env:TEM
 
 $diskMoveInfo = Move-CaaFileToVersionPath -Path $target.FullName -PackageVersion $manifest.Identity.Version -DestinationShare $diskImageShare -PackageIdentifier $manifest.Identity.Name -PassThru -IncludeExtensionInTargetPath
 
+$diskMoveInfo
+
+<##
 $familyName = New-CaaMsixName -PackageIdentifier $manifest.Identity.Name -CertHash (Get-CaaPublisherHash -publisherName $manifest.Identity.Publisher)
 $currentPackage = Get-AzWvdAppAttachPackage | Where-Object { $_.ImagePackageFamilyName -eq $familyName.Name }
 
@@ -72,3 +75,5 @@ if (($currentPackage | Measure-Object).Count -eq 0 ) {
 else {
     Update-AzWvdAppAttachPackage -AppAttachPackage $correctPackage -ResourceGroupName $resourceGroupName -Name $currentPackage.Name
 }
+
+##>
