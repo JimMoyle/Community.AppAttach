@@ -1,5 +1,5 @@
 #region Dot source the files
-$Functions = @( Get-ChildItem -Path Functions\*.ps1 -ErrorAction SilentlyContinue )
+$Functions = @( Get-ChildItem -Path functions\Private\*.ps1 -ErrorAction SilentlyContinue )
 
 Foreach ($import in $Functions) {
     Try {
@@ -14,5 +14,5 @@ Foreach ($import in $Functions) {
 Get-ChildItem -Path "$env:userprofile\Downloads\9*" | Get-ChildItem -File -Filter "*.???x*" -Recurse | Foreach-Object{
     $path = $_.FullName
     $manifest = Read-CaaMsixManifest $path 
-    $manifest.Identity | Move-CaaFileToVersionPath -DestinationShare D:\MSIXPackages -Path $path -PassThru
+    $manifest.Identity | Move-CaaFileToVersionPath -DestinationShare D:\MSIXPackages -Path $path -PassThru -Force
 }
