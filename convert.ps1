@@ -12,8 +12,8 @@ Foreach ($import in $Functions) {
 }
 #endregion
 
-$diskImageShare = "\\avdtoolsmsix.file.core.windows.net\appattach\AppAttachPackages"
-$msixPackagePath = "D:\MSIXPackages\MSTeams\24231.512.3106.6573\MSTeams-x64.msix"
+$diskImageShare = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\AppAttachDiskImages"
+$msixPackagePath = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\MSIXFiles\Microsoft.UI.Xaml.2.8\8.2310.30001.0\Microsoft.UI.Xaml.2.8_8.2310.30001.0_Universal_X86.appx"
 #$resourceGroupName = 'DeleteMe'
 #$HostPoolName = 'EditMsixPackage'
 

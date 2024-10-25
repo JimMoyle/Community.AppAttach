@@ -11,7 +11,7 @@ Foreach ($import in $Functions) {
     }
 }
 #endregion
-$destinationShare = '\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages'
+$destinationShare = '\\avdtoolsmsix.file.core.windows.net\appattach\YouTube'
 Get-ChildItem -Path "$env:userprofile\Downloads\9*" | Get-ChildItem -File -Filter "*.???x*" -Recurse | Foreach-Object{
     $path = $_.FullName
     $manifest = Read-CaaMsixManifest $path 
