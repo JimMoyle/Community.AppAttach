@@ -122,13 +122,16 @@ function Get-CaaApp {
 
             try {
                 $rdadguardAppInfo = Get-CaaRdAdguard -StoreId $StoreId -ErrorAction Stop
-                $downloadPath = Join-Path $DownloadFolder $rdadguardAppInfo.AppName
-                Invoke-WebRequest -Uri $rdadguardAppInfo.InstallerUrl -OutFile $downloadPath
-                $output = [pscustomobject]@{
-                    Path = $downloadPath
+                foreach ($app in $rdadguardAppInfo) {
+                    $downloadPath = Join-Path $DownloadFolder $app.AppName
+                    $iwrPassThru = Invoke-WebRequest -Uri $app.InstallerUrl -OutFile $downloadPath -PassThru
+                    if ($iwrPassThru.StatusCode -eq 200) {
+                        $output = [pscustomobject]@{
+                            Path = $downloadPath
+                        }
+                        Write-Output $output
+                    }
                 }
-                Write-Output $output
-                return 
             }
             catch {
                 Write-Error "Failed to get Store App $StoreId via RdAdguard"
@@ -142,6 +145,8 @@ function Get-CaaApp {
 
 $Path = 'AppJson\Microsoft.PowerShell.Preview.json'
 $Path = 'D:\GitHub\Community.AppAttach\AppJson\Microsoft.WindowsTerminal.Preview.json'
+$Path = 'AppJson\Microsoft.PowerShell.Preview.json'
 $info = Get-Content -Path $Path | ConvertFrom-Json
+#Get-CaaApp -WingetId $info.WingetId
 #Get-CaaApp -EverGreenId $info.EvergreenId -EverGreenFilter $info.EvergreenFilter
 Get-CaaApp -StoreId $info.StoreId

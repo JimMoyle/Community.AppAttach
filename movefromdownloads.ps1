@@ -11,8 +11,10 @@ Foreach ($import in $Functions) {
     }
 }
 #endregion
+$destinationShare = '\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages'
 Get-ChildItem -Path "$env:userprofile\Downloads\9*" | Get-ChildItem -File -Filter "*.???x*" -Recurse | Foreach-Object{
     $path = $_.FullName
     $manifest = Read-CaaMsixManifest $path 
-    $manifest.Identity | Move-CaaFileToVersionPath -DestinationShare D:\MSIXPackages -Path $path -PassThru -Force
+
+    $manifest.Identity | Move-CaaFileToVersionPath -DestinationShare $destinationShare -Path $path -PassThru -Force
 }

@@ -79,14 +79,6 @@ function Move-CaaFileToVersionPath {
             $destFolder = $destVer
         }
 
-        if (-not ($Force) -and (Test-Path $destFolder)) {
-            Write-Error "The destination folder $destFolder already exists. Use -Force to overwrite."
-            return
-        }
-        else{
-            Remove-Item -Path $destFolder -Recurse -Force
-        }
-
         if (-not (Test-Path $destFolder)) {
             New-Item -ItemType Directory $destFolder | Out-Null
         }
