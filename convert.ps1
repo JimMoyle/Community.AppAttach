@@ -1,5 +1,5 @@
 #region Dot source the files
-$Functions = @( Get-ChildItem -Path Functions\*.ps1 -ErrorAction SilentlyContinue )
+$Functions = @( Get-ChildItem -Path Functions\Private\*.ps1 -ErrorAction SilentlyContinue )
 
 Foreach ($import in $Functions) {
     Try {
@@ -14,6 +14,7 @@ Foreach ($import in $Functions) {
 
 $diskImageShare = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\AppAttachDiskImages"
 $msixPackagePath = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\MSIXFiles\Microsoft.UI.Xaml.2.8\8.2310.30001.0\Microsoft.UI.Xaml.2.8_8.2310.30001.0_Universal_X86.appx"
+$msixPackagePath = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\MSIXFiles\Microsoft.ScreenSketch\2022.2407.3.0\Microsoft.ScreenSketch_2022.2407.3.0_neutral_~_8wekyb3d8bbwe.msixbundle"
 #$resourceGroupName = 'DeleteMe'
 #$HostPoolName = 'EditMsixPackage'
 

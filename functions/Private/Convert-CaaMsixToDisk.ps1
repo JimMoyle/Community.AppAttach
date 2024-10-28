@@ -55,7 +55,7 @@ function Convert-CaaMsixToDisk {
             Invoke-WebRequest https://aka.ms/msixmgr -OutFile $zipLocation
 
             if (-not (Test-Path $MsixMgrLocation)) {
-                New-Item -ItemType Directory $MsixMgrLocation
+                New-Item -ItemType Directory $MsixMgrLocation | Out-Null
             }
 
             Expand-Archive -Path $zipLocation -DestinationPath $MsixMgrLocation -Force
