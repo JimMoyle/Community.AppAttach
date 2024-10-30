@@ -144,9 +144,9 @@ function Get-CaaApp {
 }  #function
 
 $Path = 'AppJson\Microsoft.PowerShell.Preview.json'
-$Path = 'D:\GitHub\Community.AppAttach\AppJson\Microsoft.WindowsTerminal.Preview.json'
-$Path = 'AppJson\Microsoft.PowerShell.Preview.json'
+$Path = 'AppJson\Microsoft.WindowsTerminal.Preview.json'
+$Path = 'AppJson\Microsoft.PowerShell.json'
 $info = Get-Content -Path $Path | ConvertFrom-Json
 #Get-CaaApp -WingetId $info.WingetId
-#Get-CaaApp -EverGreenId $info.EvergreenId -EverGreenFilter $info.EvergreenFilter
-Get-CaaApp -StoreId $info.StoreId
+Get-CaaApp -EverGreenId $info.EvergreenId -EverGreenFilter $info.EvergreenFilter
+#Get-CaaApp -StoreId $info.StoreId
