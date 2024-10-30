@@ -15,6 +15,7 @@ Foreach ($import in $Functions) {
 $diskImageShare = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\AppAttachDiskImages"
 $msixPackagePath = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\MSIXFiles\Microsoft.UI.Xaml.2.8\8.2310.30001.0\Microsoft.UI.Xaml.2.8_8.2310.30001.0_Universal_X86.appx"
 $msixPackagePath = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\MSIXFiles\Microsoft.ScreenSketch\2022.2407.3.0\Microsoft.ScreenSketch_2022.2407.3.0_neutral_~_8wekyb3d8bbwe.msixbundle"
+$msixPackagePath = "\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages\Microsoft.PowerShell\2024.1016.1807.0\PowerShell-7.4.6-win.msixbundle"
 #$resourceGroupName = 'DeleteMe'
 #$HostPoolName = 'EditMsixPackage'
 
