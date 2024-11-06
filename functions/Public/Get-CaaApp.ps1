@@ -32,7 +32,7 @@ function Get-CaaApp {
         [Parameter(
             ValuefromPipelineByPropertyName = $true
         )]
-        [System.String]$DownloadFolder = $env:TEMP,
+        [System.String]$DownloadFolder = (New-Object -ComObject Shell.Application).Namespace('shell:Downloads').Self.Path,
 
         [Parameter(
             ParameterSetName = 'InputObject',
@@ -148,5 +148,5 @@ $Path = 'AppJson\Microsoft.WindowsTerminal.Preview.json'
 $Path = 'AppJson\Microsoft.PowerShell.json'
 $info = Get-Content -Path $Path | ConvertFrom-Json
 #Get-CaaApp -WingetId $info.WingetId
-Get-CaaApp -EverGreenId $info.EvergreenId -EverGreenFilter $info.EvergreenFilter
+Get-CaaApp -EverGreenId $info.EvergreenId -EverGreenFilter $info.EvergreenFilter 
 #Get-CaaApp -StoreId $info.StoreId
