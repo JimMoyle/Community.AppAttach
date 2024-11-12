@@ -16,6 +16,7 @@ $diskImageShare = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\AppAtt
 $msixPackagePath = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\MSIXFiles\Microsoft.UI.Xaml.2.8\8.2310.30001.0\Microsoft.UI.Xaml.2.8_8.2310.30001.0_Universal_X86.appx"
 $msixPackagePath = "\\avdtoolsmsix.file.core.windows.net\appattach\YouTube\MSIXFiles\Microsoft.ScreenSketch\2022.2407.3.0\Microsoft.ScreenSketch_2022.2407.3.0_neutral_~_8wekyb3d8bbwe.msixbundle"
 $msixPackagePath = "C:\Users\jimoyle\Downloads\PowerShell-7.4.6-win.msixbundle"
+$msixPackagePath = "C:\Users\jimoyle\Downloads\9MZ95KL8MR0L\Microsoft.ScreenSketch_2022.2409.25.0_Desktop_X64.msixbundle"
 #$resourceGroupName = 'DeleteMe'
 #$HostPoolName = 'EditMsixPackage'
 
@@ -27,7 +28,7 @@ catch {
     return
 }
 
-$target = Convert-CaaMsixToDisk -Path $msixPackagePath -DestinationPath $env:TEMP -PassThru
+$target = Convert-CaaMsixToDisk -Path $msixPackagePath -DestinationPath $env:TEMP -PassThru -Type vhdx
 
 $diskMoveInfo = Move-CaaFileToVersionPath -Path $target.FullName -PackageVersion $manifest.Identity.Version -DestinationShare $diskImageShare -PackageIdentifier $manifest.Identity.Name -PassThru -IncludeExtensionInTargetPath
 
