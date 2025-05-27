@@ -11,7 +11,7 @@ Foreach ($import in $Functions) {
     }
 }
 #endregion
-$path = "C:\Users\jimoyle\AppData\Local\Temp\PowerShell-7.4.6-win.msixbundle"
+$path = "C:\Users\jimoyle\Downloads\9MZ95KL8MR0L\Microsoft.ScreenSketch_2022.2409.25.0_Desktop_X64.msixbundle"
 $destinationShare = '\\avdtoolsmsix.file.core.windows.net\appattach\MSIXPackages'
 Get-ChildItem -Path $path | Get-ChildItem -File -Filter "*.???x*" -Recurse | Foreach-Object{
     $path = $_.FullName
