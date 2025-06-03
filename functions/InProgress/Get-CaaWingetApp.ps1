@@ -17,7 +17,6 @@ function Get-CaaWingetApp {
             ValuefromPipeline = $true
         )]
         [System.String]$Path = $ENV:TEMP
-
     )
 
     begin {
@@ -42,14 +41,15 @@ function Get-CaaWingetApp {
         $wingetResult = Export-WingetPackage @ExportWingetPackageParam
 
         switch ($wingetResult.Status) {
-            'NoApplicableInstallers' { Write-Error -Message "No applicable installers found for $Id" }
-            'DownloadError' { Write-Error -Message "Download is disabled for $($WingetResult.Name) with id: $Id"          }
-            'OK' { # Do nothing, as the status is successfu}
+            'NoApplicableInstallers' { Write-Error -Message "No applicable installers found for $Id"; break }
+            'DownloadError' { Write-Error -Message "Download is disabled for $($WingetResult.Name) with id: $Id"; break }
+            'OK' { break } # Do nothing, as the status is successful
             default { Write-Error -Message "Download failed for $Id with error: $($wingetResult.Status)" }
-        }
+        } # switch
 
     } # process
     end {} # end
 }  #function
 
-Get-CaaWingetApp 9P7KNL5RWT25
+
+Get-CaaWingetApp 9PP3C07GTVRH
