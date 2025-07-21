@@ -85,6 +85,10 @@ function Read-CaaMsixManifest {
             Add-Type -assembly "system.io.compression.filesystem"
             $zip = [io.compression.zipfile]::OpenRead($Path)
             $file = $zip.Entries | where-object { $_.FullName -eq $fileToRead }
+            if (-not $file){
+                $fileToRead = 'AppxMetadata/AppxBundleManifest.xml'
+                $file = $zip.Entries | where-object { $_.FullName -eq $fileToRead }
+            }
     
             $stream = $file.Open()
             $reader = New-Object IO.StreamReader($stream)
