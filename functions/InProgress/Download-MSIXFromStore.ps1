@@ -77,11 +77,11 @@ Write-Host "Running script version $scriptVersion"
 Set-Location $PSScriptRoot
 
 # Variables (replace with actual arguments)
-$arch = "x64"            # Options: x64, x86, arm, all
-$installExtension = "msix"  # Options: msix, appx, all
+$arch = "all"            # Options: x64, x86, arm, all
+$installExtension = "all"  # Options: msix, appx, all
 $releaseType = "RP"         # Options: retail, RP, WIS, WIF
-$downloadDirectory = "C:\Downloads" # Location for file downloads
-#$wingetID = "9NRX63209R7B" # Change to correspond to required package ID from WinGet
+$downloadDirectory = "C:\Users\jimoyle\AppData\Local\Temp\WinGetExport" # Location for file downloads
+$wingetID = "9NBLGGH4VVNH" # Change to correspond to required package ID from WinGet
 
 # Verbose logging enabled
 $VerbosePreference = "Continue"
