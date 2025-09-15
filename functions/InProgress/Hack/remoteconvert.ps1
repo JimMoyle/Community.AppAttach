@@ -4,12 +4,13 @@
 . .\functions\Private\New-CaaMsixName.ps1
 . .\functions\Private\Format-CaaVersion.ps1
 
-$TemplatePath = "D:\GitHub\Community.AppAttach\functions\InProgress\Hack\RemoteConvertTemplate.xml"
+$TemplatePath = "C:\GitHub\Community.AppAttach-1\functions\InProgress\Hack\RemoteConvertTemplate.xml"
 $WingetId = 'Microsoft.SQLServerManagementStudio.21'
 $ExportRootPath = "C:\JimM\WingetDownloads"
 $CertHash = '3ap7qhtey6z62'
 $ConverterMachineName = 'Target-0'
 $UserName = 'jimadmin@jimoyle.com'
+$machinePass = get-content "c:\jimm\pass.txt"
 
 #script
 
@@ -51,3 +52,7 @@ $params = @{
     PackageSaveLocation = Join-Path -Path $downloadFolder -ChildPath $fileName
 }
 Update-CaaMptTemplate @params
+
+
+
+$outputPackage = Start-Process MSIXPackagingTool.exe -ArgumentList "create-package --template $templatePath --machinePassword $machinePass" -Wait -Passthru -NoNewWindow
