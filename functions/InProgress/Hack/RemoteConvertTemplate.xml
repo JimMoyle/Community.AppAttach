@@ -299,5 +299,5 @@
   <SaveLocation PackagePath="ThisIsTheTemplatePackagePath" TemplatePath="ThisIsTheTemplatePath" />
   <Installer Path="ThisIsTheTemplateInstallerPath" Arguments="ThisIsTheTemplateInstallerArguments" />
   <RemoteMachine ComputerName="ThisIsTheTemplateComputerName" Username="ThisIsTheTemplateUsername" xmlns="http://schemas.microsoft.com/msix/msixpackagingtool/template/1904" />
-  <PackageInformation PackageName="ThisIsTheTemplatePackageName" PackageDisplayName="ThisIsTheTemplatePackageDisplayName" PublisherName="ThisIsTheTemplatePublisherName" PublisherDisplayName="ThisIsTheTemplatePublisherDisplayName" Version="ThisIsTheTemplateVersion" PackageDescription="ThisIsTheTemplatePackageDescription" />
+  <PackageInformation PackageName="ThisIsTheTemplatePackageName" PackageDisplayName="ThisIsTheTemplatePackageDisplayName" PublisherName="ThisIsTheTemplatePublisherName" PublisherDisplayName="ThisIsTheTemplatePublisherDisplayName" Version="ThisIsTheTemplateVersion" p4:PackageDescription="ThisIsTheTemplatePackageDescription" xmlns:p4="http://schemas.microsoft.com/msix/msixpackagingtool/template/1910" />
 </MsixPackagingToolTemplate>
