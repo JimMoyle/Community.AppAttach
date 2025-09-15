@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<MsixPackagingToolTemplate xmlns="http://schemas.microsoft.com/appx/msixpackagingtool/template/2018">
+<MsixPackagingToolTemplate xmlns="http://schemas.microsoft.com/appx/msixpackagingtool/template/2018" xmlns:V2="http://schemas.microsoft.com/msix/msixpackagingtool/template/1904" xmlns:V3="http://schemas.microsoft.com/msix/msixpackagingtool/template/1907" xmlns:V4="http://schemas.microsoft.com/msix/msixpackagingtool/template/1910" xmlns:V5="http://schemas.microsoft.com/msix/msixpackagingtool/template/2001">
   <Settings AllowTelemetry="true" ApplyAllPrepareComputerFixes="false" GenerateCommandLineFile="true" AllowPromptForPassword="false" p4:EnforceMicrosoftStoreRequirements="true" p5:ServerPortNumber="1599" p6:AddPackageIntegrity="true" p7:SupportedWindowsVersionForMsixCore="None" xmlns:p7="http://schemas.microsoft.com/msix/msixpackagingtool/template/2004" xmlns:p6="http://schemas.microsoft.com/msix/msixpackagingtool/template/2001" xmlns:p5="http://schemas.microsoft.com/msix/msixpackagingtool/template/1904" xmlns:p4="http://schemas.microsoft.com/msix/msixpackagingtool/template/2007">
     <ExclusionItems>
       <FileExclusion ExcludePath="[{CryptoKeys}]" />
@@ -296,8 +296,8 @@
       <ServiceExclusion ServiceName="XboxNetApiSvc" />
     </ExclusionItems>
   </Settings>
-  <SaveLocation PackagePath="C:\Users\JimAdmin.JIMMOYLE\Desktop\vscodeinsiders_1.105.1.0_x64__3ap7qhtey6z62.msix" TemplatePath="C:\Users\JimAdmin.JIMMOYLE\Desktop\vscodeinsiders_1.105.1.0_x64__3ap7qhtey6z62_template.xml" />
-  <Installer Path="C:\JimM\Microsoft Visual Studio Code Insiders_1.105.0_Machine_X64_inno_en-US.exe" Arguments="/SP- /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /mergetasks=!runcode" />
-  <RemoteMachine ComputerName="target-0" Username="jimadmin@jimmoyle.com" xmlns="http://schemas.microsoft.com/msix/msixpackagingtool/template/1904" />
-  <PackageInformation PackageName="vscodeinsiders" PackageDisplayName="vscode insiders" PublisherName="CN=JimMoyleMsixCert" PublisherDisplayName="JimMoyle" Version="1.105.1.0" />
+  <SaveLocation PackagePath="C:\JimM\WingetDownloads\Microsoft.SQLServerManagementStudio.21\@{Name=Microsoft.SQLServerManagementStudio.21_21.5.14.0_x64__3ap7qhtey6z62}" TemplatePath="C:\JimM\WingetDownloads\Microsoft.SQLServerManagementStudio.21.xml" />
+  <Installer Path="C:\JimM\WingetDownloads\Microsoft.SQLServerManagementStudio.21\Microsoft SQL Server Management Studio 21_21.5.14_Machine_X64_exe_en-US.exe" Arguments="--quiet --wait" />
+  <RemoteMachine ComputerName="Target-0" Username="jimadmin@jimoyle.com" xmlns="http://schemas.microsoft.com/msix/msixpackagingtool/template/1904" />
+  <PackageInformation PackageName="vscodeinsiders" PackageDisplayName="vscode insiders" PublisherName="Microsoft Corporation" PublisherDisplayName="JimMoyle" Version="21.5.14.0" PackageDescription="SQL Server Management Studio (SSMS) is an integrated environment for managing any SQL infrastructure" />
 </MsixPackagingToolTemplate>

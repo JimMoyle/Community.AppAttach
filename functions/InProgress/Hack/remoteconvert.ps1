@@ -1,6 +1,10 @@
 #requires -modules 'powershell-yaml', 'microsoft.winget.client'
 
-$TemplatePath = "C:\JimM\insiders-template.yaml"
+. .\functions\InProgress\Hack\Update-CaaMptTemplate.ps1
+. .\functions\Private\New-CaaMsixName.ps1
+. .\functions\Private\Format-CaaVersion.ps1
+
+$TemplatePath = "D:\GitHub\Community.AppAttach\functions\InProgress\Hack\RemoteConvertTemplate.xml"
 $WingetId = 'Microsoft.SQLServerManagementStudio.21'
 $ExportRootPath = "C:\JimM\WingetDownloads"
 $CertHash = '3ap7qhtey6z62'
@@ -10,7 +14,7 @@ $UserName = 'jimadmin@jimoyle.com'
 #script
 
 $downloadFolder = Join-Path -Path $ExportRootPath -ChildPath $WingetId
-$TemplateSaveLocation = Join-Path -Path $ExportRootPath -ChildPath ("$WingetId" + ".xml")
+$TemplateSaveLocation = Join-Path -Path $downloadFolder -ChildPath ("$WingetId" + ".xml")
 
 New-Item -Path $downloadFolder -ItemType Directory -Force | Out-Null
 
@@ -22,6 +26,7 @@ if ($download.status -ne 'OK') {
 }
 
 $yamlfile = Get-ChildItem -Path $downloadFolder  | where-object {$_.Extension -eq '.yaml'}
+$installfile = Get-ChildItem -Path $downloadFolder  | where-object {$_.Extension -ne '.yaml' -and $_.Extension -ne '.xml'}
 
 $yaml = Get-Content -Raw -Path $yamlfile.FullName
 
@@ -32,14 +37,16 @@ $formattedVersion = (Format-CaaVersion -Version $version).Version
 $fileName = New-CaaMsixName -PackageIdentifier $yamlObject.PackageIdentifier -CertHash $CertHash -Version $formattedVersion -Architecture $yamlObject.Installers.Architecture
 $params = @{
     Path = $TemplatePath
+    PackageName = $yamlObject.PackageIdentifier
+    PackageDisplayName = $yamlObject.PackageName
+    InstallerPath = $Installfile.FullName.ToString()
     ComputerName = $ConverterMachineName
     UserName = $UserName
     Version = $formattedVersion
     TemplateSaveLocation = $TemplateSaveLocation
     InstallerSwitches = $yamlObject.Installers.InstallerSwitches.Silent + ' ' + $yamlObject.Installers.InstallerSwitches.Custom
-    Publisher = $yamlObject.Publisher
-    PublisherDisplayName = $yamlObject.PublisherDisplayName
-    PackageDisplayName = $yamlObject.PackageDisplayName
+    PublisherName = $yamlObject.Publisher
+    PublisherDisplayName = $yamlObject.Publisher
     ShortDescription = $yamlObject.ShortDescription
     PackageSaveLocation = Join-Path -Path $downloadFolder -ChildPath $fileName
 }
