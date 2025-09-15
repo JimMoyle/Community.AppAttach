@@ -1,8 +1,8 @@
 #requires -modules 'powershell-yaml', 'microsoft.winget.client'
 
 . .\functions\InProgress\Hack\Update-CaaMptTemplate.ps1
-. .\functions\Private\New-CaaMsixName.ps1
-. .\functions\Private\Format-CaaVersion.ps1
+. .\functions\InProgress\Hack\New-CaaMsixName.ps1
+. .\functions\InProgress\Hack\Format-CaaVersion.ps1
 
 #Change these parameters
 
