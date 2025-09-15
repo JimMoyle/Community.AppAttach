@@ -495,6 +495,7 @@ param(
     [string]$Path
 )
 ```
+
 ## Always Use PascalCase for Variables Derived from Parameters, and camelCase for Other Variables
 
 - Variables that are directly assigned from function parameters should use PascalCase to match the parameter name and improve clarity.
