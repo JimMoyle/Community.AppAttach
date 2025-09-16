@@ -26,8 +26,8 @@ function ConvertTo-Msix {
         [string]$CertPublisherName
     )
     begin {
-        ]
-        #requires -modules 'powershel-yaml', 'Microsoft.WinGet.Client'
+        
+        #requires -modules 'powershell-yaml', 'Microsoft.WinGet.Client'
         # Import required scripts
         . .\functions\InProgress\Hack\Update-CaaMptTemplate.ps1
         . .\functions\InProgress\Hack\New-CaaMsixName.ps1
@@ -82,14 +82,14 @@ function ConvertTo-Msix {
 }
 
 $params = @{
-    TemplatePath         = 'D:\GitHub\Community.AppAttach\functions\InProgress\Hack\RemoteConvertTemplate.xml'
-    WingetId             = 'Microsoft.Azure.StorageExplorer'
+    TemplatePath         = 'C:\GitHub\Community.AppAttach-1\functions\InProgress\Hack\RemoteConvertTemplate.xml'
+    WingetId             = 'Google.Chrome'
     ExportRootPath       = 'C:\JimM\WingetDownloads'
     CertHash             = '3ap7qhtey6z62'
     ConverterMachineName = 'Target-0'
     UserName             = 'JimAdmin@jimmoyle.com'
-    MachinePass          = Get-Content c:\jimmm\pass.txt
-    CertPublisherName    = 'Microsoft'
+    MachinePass          = (Get-Content "C:\JimM\pass.txt")
+    CertPublisherName    = 'CN=MsixPackageCert'
 }
 
 ConvertTo-Msix @params
