@@ -4,7 +4,9 @@ function ConvertTo-Msix {
         [Parameter(Mandatory)]
         [string]$TemplatePath,
 
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory,
+        ValueFromPipeline=$true
+        )]
         [string]$WingetId,
 
         [Parameter(Mandatory)]
@@ -48,8 +50,8 @@ function ConvertTo-Msix {
             return
         }
 
-        $yamlfile = Get-ChildItem -Path $downloadFolder | Where-Object { $_.Extension -eq '.yaml' }
-        $installfile = Get-ChildItem -Path $downloadFolder | Where-Object { $_.Extension -ne '.yaml' -and $_.Extension -ne '.xml' }
+        $yamlfile = Get-ChildItem -Path $downloadFolder -File | Where-Object { $_.Extension -eq '.yaml' }
+        $installfile = Get-ChildItem -Path $downloadFolder -File | Where-Object { $_.Extension -ne '.yaml' -and $_.Extension -ne '.xml' }
 
         $yaml = Get-Content -Raw -Path $yamlfile.FullName
         $yamlObject = ConvertFrom-Yaml -Yaml $yaml
@@ -77,19 +79,21 @@ function ConvertTo-Msix {
 
         $outputPackage = Start-Process MSIXPackagingTool.exe -ArgumentList "create-package --template $TemplateSaveLocation --machinePassword $MachinePass" -Wait -Passthru -NoNewWindow
         Write-Output $outputPackage
+        Remove-Item -Path $installfile.FullName -Force -Recurse
     }
     end {}
 }
 
 $params = @{
     TemplatePath         = 'C:\GitHub\Community.AppAttach-1\functions\InProgress\Hack\RemoteConvertTemplate.xml'
-    WingetId             = 'Google.Chrome'
+    #WingetId             = 'VideoLAN.VLC'
     ExportRootPath       = 'C:\JimM\WingetDownloads'
     CertHash             = '3ap7qhtey6z62'
     ConverterMachineName = 'Target-0'
     UserName             = 'JimAdmin@jimmoyle.com'
     MachinePass          = (Get-Content "C:\JimM\pass.txt")
-    CertPublisherName    = 'CN=MsixPackageCert'
+    CertPublisherName    = 'CN=JimMoyleMsixCerts'
 }
 
-ConvertTo-Msix @params
+$jWingetIds = Get-Content 'C:\JimM\J.txt'
+$jWingetIds | ConvertTo-Msix @params

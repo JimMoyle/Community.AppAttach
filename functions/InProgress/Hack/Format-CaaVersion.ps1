@@ -15,10 +15,11 @@ function Format-CaaVersion {
     process {
         $verCount = $Version.ToString().Split('.').Count
         switch ($true) {
-            { $verCount -eq 4 } { $outputVer = $Version ;break}
+            { $verCount -eq 4 } { $outputVer = $Version ; break }
             { $verCount -lt 4 } { 
-                $outputVer = (4 - $verCount)..1 | ForEach-Object {
-                    $Version.ToString() + '.0'
+                $outputVer = $Version.ToString()
+                (4 - $verCount)..1 | ForEach-Object {
+                    $outputVer += '.0'
                 } 
                 break
             }
@@ -28,10 +29,19 @@ function Format-CaaVersion {
             }
             Default {}
         }
-        
-        $output = [PSCustomObject]@{
-            Version = [version]$outputVer
+
+        #Last, the revision needs to be 0 to be considered for store and MSIX packaging tool
+
+        $outputVer = $outputVer.ToString() -replace "\.\d+$", ".0"
+        try {
+            $output = [PSCustomObject]@{
+                Version = [version]$outputVer
+            }
         }
+        catch {
+            Write-Warning "$outputVer Does not comply with version formatting requirements"
+        }
+
 
         Write-Output $output
         
